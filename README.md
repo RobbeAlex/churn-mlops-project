@@ -1,3 +1,4 @@
+# 📡 Proyecto Colaborativo MLOps: Predicción de Churn
 
 ## 🎯 Objetivo del Proyecto
 Construir un pipeline de Machine Learning modular, reproducible y colaborativo para predecir si un cliente de telecomunicaciones abandonará el servicio (**Churn**).
