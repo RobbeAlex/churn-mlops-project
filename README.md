@@ -20,51 +20,8 @@ Todos los equipos trabajarán con el dataset **Telco Customer Churn**.
 
 ---
 
-## 👥 Roles y Responsabilidades (Equipos de 4)
 ## 👥 Roles y Responsabilidades
 
-Cada miembro del equipo es responsable de un módulo específico. Deben definir sus "contratos de interface" (nombres de funciones y tipos de datos que pasan entre módulos) antes de empezar a codificar.
-
-### 1. 👷 Data Engineer (`src/data_loader.py`)
-**Tu misión:** Transformar datos brutos y sucios en datos limpios listos para entrenar.
-
-*   **Tareas Críticas:**
-    *   Cargar el CSV desde `data/raw/`.
-    *   **Limpieza:** La columna `TotalCharges` tiene espacios vacíos `" "` en lugar de nulos. Debes convertirla a numérico y manejar los NaN resultantes (ej. llenar con mediana o 0).
-    *   **Preprocesamiento:** Eliminar `customerID`. Codificar variables binarias (`gender`, `Partner`, `Churn`) de Texto a 0/1.
-    *   **División:** Separar en Train/Test usando `test_size` y `random_state` definidos en `config/params.yaml`.
-*   **Entregable:** Función `load_and_preprocess_data(config)` que retorna `X_train, X_test, y_train, y_test`.
-
-### 2. 🧠 ML Engineer (`src/model_trainer.py`)
-**Tu misión:** Experimentar con algoritmos y guardar el mejor modelo.
-
-*   **Tareas Críticas:**
-    *   Implementar una "Fábrica de Modelos" que permita elegir entre al menos **dos algoritmos** (ej. `RandomForest` y `SVM` o `LogisticRegression`) según el config.
-    *   Entrenar el modelo con los datos recibidos.
-    *   Calcular métricas clave: **Accuracy**, **Recall** (crítico para Churn) y **F1-Score**.
-    *   Guardar el modelo entrenado en la carpeta `models/` usando `joblib`.
-*   **Entregable:** Función `train_and_save_model(X_train, y_train, X_test, y_test, config)` que guarda el `.pkl` y retorna un diccionario de métricas.
-
-### 3. ⚙️ MLOps Engineer (`src/main.py` y `config/`)
-**Tu misión:** Orquestar el flujo y gestionar la configuración externa.
-
-*   **Tareas Críticas:**
-    *   Crear y mantener `config/params.yaml`. Debe incluir:
-        *   Parámetros de datos (`test_size`, `random_state`).
-        *   Parámetros del modelo (`model_name`, `n_estimators`, `C`, `kernel`, etc.).
-        *   Rutas de salida.
-    *   Escribir `src/main.py`: Este script debe importar las funciones del Data Engineer y del ML Engineer y ejecutarlas en orden.
-    *   Asegurar que el proyecto corra con el comando: `python -m src.main`.
-*   **Entregable:** Un `main.py` funcional que lea el YAML y ejecute el pipeline completo sin errores de importación.
-
-### 4. 🛡️ QA & Production Engineer (`src/predict.py` y `tests/`)
-**Tu misión:** Validar que el sistema funcione y preparar la inferencia para nuevos datos.
-
-*   **Tareas Críticas:**
-    *   Crear `src/predict.py`: Un script que cargue el modelo guardado (`models/model.pkl`) y permita predecir la clase de un nuevo cliente (ej. pasando una lista de características manualmente).
-    *   Manejo de Errores: Si el modelo no existe, el script debe dar un mensaje claro, no un error críptico.
-    *   Escribir tests básicos en `tests/test_pipeline.py` (ej. verificar que `load_data` no retorne DataFrames vacíos).
-*   **Entregable:** Un script de predicción robusto y al menos 2 tests unitarios pasando.
 1.  **Data Engineer (`src/data_loader.py`):** Limpieza de datos (imputación de valores nulos en `TotalCharges`), eliminación de identificadores y transformación de variables categóricas.
 2.  **ML Engineer (`src/trainer_model.py`):** Implementación de la fábrica de modelos (Random Forest y Regresión Logística), cálculo de métricas y serialización del modelo.
 3.  **MLOps Engineer (`src/main.py` y `config/`):** Orquestación del flujo completo, gestión de hiperparámetros en `params.yaml` y configuración de rutas dinámicas absolutas.
