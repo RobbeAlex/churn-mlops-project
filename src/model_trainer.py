@@ -30,23 +30,30 @@ def train_and_save_model(X_train, y_train, X_test, y_test, config):
         'f1_score': f1_score(y_test, y_pred)
     }
 
-    # === SISTEMA DE RUTAS SEGURO Y BLINDADO ===
+    # === SISTEMA DE RUTAS SEGURO Y BLINDADO (REVISADO PARA GITHUB ACTIONS) ===
     # 1. Extraemos correctamente la ruta desde la sección 'paths' del diccionario
     config_path = config['paths']['model_path']
 
-    # 2. Limpiamos cualquier prefijo absoluto como '/app/' o '/' que cause conflictos de permisos
-    if config_path.startswith('/app/'):
-        config_path = config_path.replace('/app/', '', 1)
-    elif config_path.startswith('/'):
-        config_path = config_path.lstrip('/')
+    # 2. SOLUCIÓN COMPATIBLE CON PYTEST: Validamos si es una ruta absoluta del sistema
+    if os.path.isabs(config_path):
+        # Si pytest envía una ruta absoluta (como /tmp/...), la usamos de manera directa
+        save_path = config_path
+    else:
+        # Si es la ejecución normal en producción, aplicamos tus filtros de limpieza
+        if config_path.startswith('/app/'):
+            config_path = config_path.replace('/app/', '', 1)
+        elif config_path.startswith('/'):
+            config_path = config_path.lstrip('/')
 
-    # 3. Construimos la ruta dinámica basada en la ubicación del proyecto en Codespaces
-    ruta_script = os.path.abspath(__file__)
-    raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script)) # Sube un nivel desde src/
-    save_path = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
+        # Construimos la ruta dinámica basada en la ubicación del proyecto
+        ruta_script = os.path.abspath(__file__)
+        raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script)) # Sube un nivel desde src/
+        save_path = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
 
-    # 4. Creación segura de directorios y guardado del artefacto binario
+    # 3. Creación segura de directorios padres (esencial para las carpetas temporales de GitHub)
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    
+    # 4. Guardado del artefacto binario (.pkl)
     joblib.dump(model, save_path)
 
     return metrics
