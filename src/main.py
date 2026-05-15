@@ -1,8 +1,9 @@
 import yaml
 import sys
 import os
-from src.model_trainer import train_and_save_model
-from src.data_loader import load_and_preprocess_data
+import random
+import numpy as np
+from src.model_trainer import load_and_preprocess_data, train_and_save_model
 
 
 def main():
@@ -20,11 +21,18 @@ def main():
 
     try:
         # Usar la nueva ruta dinámica en lugar del string estático
-        with open(ruta_config, 'r') as file:
-            config = yaml.safe_load(file)
+        with open('config/params.yaml', 'r') as f:
+            config = yaml.safe_load(f)
     except FileNotFoundError:
         print(f"Error: No se encontró el archivo en la ruta: {ruta_config}")
         sys.exit(1)
+
+    semilla_global = config['data_split']['random_state']
+
+    # Fijar el azar de los generadores base de Python y NumPy
+    semilla_global = config['data_split']['random_state']
+    random.seed(semilla_global)
+    np.random.seed(semilla_global)
 
     print("Iniciando pipeline de Machine Learning...")
 
