@@ -3,7 +3,7 @@ import joblib
 import pandas as pd
 import yaml
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 # Configuración de rutas dinámicas para Zapopan/Windows
 ruta_script = os.path.abspath(__file__)
@@ -33,13 +33,11 @@ class ChurnInput(BaseModel):
     TotalCharges: float
     gender: int
     Partner: int
-    # Mapeo de columnas Dummy con espacios usando Alias
     InternetService_Fiber_optic: int = Field(0, alias="InternetService_Fiber optic")
     PaymentMethod_Electronic_check: int = Field(0, alias="PaymentMethod_Electronic check")
 
-    class Config:
-        # Permite que Pydantic lea los campos tanto por el nombre de la variable como por el alias
-        populate_by_name = True
+    # Sintaxis oficial moderna para Pydantic v2
+    model_config = ConfigDict(populate_by_name=True)
 
 
 @app.post("/predict")
