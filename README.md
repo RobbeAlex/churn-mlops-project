@@ -108,32 +108,33 @@ pip install -r requirements.txt
 
 ## ¿Cómo lo ejecuto?
 
-### 1. Entrenar el modelo
+### 1. **Clonar el repositorio**:
 
 ```bash
-python -m src.main
+   `git clone <url-de-tu-repo>`
 ```
 
 Carga los datos, entrena el modelo configurado en `config/params.yaml` y guarda el `.pkl` en `models/`.
 
-### 2. Ejecutar una predicción de ejemplo
+
+### 2. **Entrenar el modelo**:
 
 ```bash
-python -m src.predict
+    `docker-compose run train`
 ```
 
 ### 3. Lanzar la API
 
 ```bash
-uvicorn src.api:app --reload
+    `docker-compose up -d api`
 ```
 
 Disponible en `http://127.0.0.1:8000`. Documentación interactiva en `http://127.0.0.1:8000/docs`.
 
-### 4. Correr las pruebas
+### 4. **Probar la API**:
 
 ```bash
-pytest tests/
+    Acceder a `http://localhost:8000/docs` para realizar predicciones.
 ```
 
 ---

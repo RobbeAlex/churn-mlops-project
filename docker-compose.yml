@@ -1,0 +1,22 @@
+services:
+  train:
+    build: .
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    command: python src/main.py
+
+  api:
+    build: .
+    environment:
+      - PYTHONPATH=/app
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    depends_on:
+      train:
+        condition: service_completed_successfully
