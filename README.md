@@ -22,8 +22,8 @@ Algoritmo seleccionado: `RandomForestClassifier` con configuración definida en 
 
 ## ¿Qué dataset usa y para qué sirve?
 
-**Dataset:** [Telco Customer Churn — Kaggle](https://www.kaggle.com/datasets/blastchar/telco-custom)
-**Archivo:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`
+**Dataset:** [Telco Customer Churn — Kaggle](https://www.kaggle.com/datasets/blastchar/telco-custom)  
+**Archivo:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`  
 **Problema:** Clasificación Binaria — ¿El cliente se va? (`Yes` / `No`)
 
 Contiene 7,043 registros de clientes con variables demográficas, servicios contratados (teléfono, internet, seguridad, etc.) y datos financieros. Se usa para entrenar un clasificador binario que predice si un cliente presentará churn en el próximo ciclo.
@@ -69,7 +69,7 @@ churn-mlops-project/
 
 ```bash
 # 1. Clonar el repositorio
-git clone <url-del-repo>
+git clone https://github.com/RobbeAlex/churn-mlops-project
 cd churn-mlops-project
 
 # 2. Crear entorno virtual (recomendado)
@@ -94,7 +94,7 @@ pip install -r requirements.txt
 
 ## 🚀 Flujo de Trabajo con Git
 
-1. **Clonar:** `git clone <url-del-repo-del-equipo>`
+1. **Clonar:** `git clone https://github.com/RobbeAlex/churn-mlops-project`
 2. **Ramas:** Cada alumno crea su rama:
    - `git checkout -b feature/data-engineer`
    - `git checkout -b feature/ml-engineer`
