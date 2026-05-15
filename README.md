@@ -1,8 +1,13 @@
 # 📡 Proyecto Colaborativo MLOps: Predicción de Churn
 
+## 🛠️ Tecnologías y Lenguajes
+
+- **Python** (94.3%): Scripts, lógica del pipeline, API y procesamiento principal.
+- **Dockerfile** (5.7%): Contenedores y despliegue para portabilidad y reproducibilidad.
+
 ## ¿Qué hace este proyecto?
 
-Pipeline de Machine Learning modular y reproducible para predecir si un cliente de telecomunicaciones abandonará el servicio (**Churn**). El proyecto simula un entorno laboral real donde **4 roles especializados** integran su código en un solo repositorio usando Git.
+Pipeline de Machine Learning modular y reproducible para predecir si un cliente de telecomunicaciones abandonará el servicio (**Churn**). El proyecto simula un entorno laboral real donde **4 roles colaboran** bajo buenas prácticas de MLOps.
 
 Incluye preprocesamiento de datos, entrenamiento de modelos (Random Forest / Regresión Logística), serialización del modelo entrenado y una API REST lista para producción con FastAPI.
 
@@ -26,7 +31,7 @@ Algoritmo seleccionado: `RandomForestClassifier` con configuración definida en 
 **Archivo:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`  
 **Problema:** Clasificación Binaria — ¿El cliente se va? (`Yes` / `No`)
 
-Contiene 7,043 registros de clientes con variables demográficas, servicios contratados (teléfono, internet, seguridad, etc.) y datos financieros. Se usa para entrenar un clasificador binario que predice si un cliente presentará churn en el próximo ciclo.
+Contiene 7,043 registros de clientes con variables demográficas, servicios contratados (teléfono, internet, seguridad, etc.) y datos financieros. Se usa para entrenar un clasificador binario que predice la baja de clientes.
 
 > **Instrucción importante:**
 > 1. Descarga el CSV desde el enlace de arriba.
@@ -206,3 +211,4 @@ Se utilizó IA (Gemini) como apoyo técnico para resolver desafíos de arquitect
 - [ ] `predict.py` carga el modelo y realiza una predicción de ejemplo.
 - [ ] El historial de Git muestra contribuciones de los 4 miembros.
 - [ ] El `README.md` incluye los resultados obtenidos (Accuracy / Recall del mejor modelo)
+
