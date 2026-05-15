@@ -1,3 +1,4 @@
+import kagglehub
 from kagglehub import KaggleDatasetAdapter
 
 # Path bajo data/raw
