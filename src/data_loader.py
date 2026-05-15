@@ -13,7 +13,7 @@ def load_and_preprocess_data(config):
 
     # 2. Extraer la ruta relativa del YAML y unirla con la raíz del proyecto
     # Usamos replace para evitar problemas entre diagonales de Windows (\) y Linux/Mac (/)
-    ruta_relativa_csv = config['paths']['data_raw'].replace('/', os.sep)
+    ruta_relativa_csv = config['paths']['raw_data'].replace('/', os.sep)
     ruta_csv_absoluta = os.path.join(raiz_proyecto, ruta_relativa_csv)
 
     # 3. Cargar el CSV usando la ruta blindada
@@ -39,8 +39,9 @@ def load_and_preprocess_data(config):
     # Dividir el dataset usando los parámetros de configuración
     X_train, X_test, y_train, y_test = train_test_split(
         X, y,
-        test_size=config['data']['test_size'],
-        random_state=config['data']['random_state']
+        test_size=config['data_split']['test_size'],
+        random_state=config['data_split']['random_state']
     )
 
+    return X_train, X_test, y_train, y_test
     return X_train, X_test, y_train, y_test

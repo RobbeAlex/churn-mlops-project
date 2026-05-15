@@ -1,7 +1,7 @@
 import yaml
 import sys
 import os
-from src.trainer_model import train_and_save_model  # O model_trainer, según lo hayas dejado
+from src.model_trainer import train_and_save_model
 from src.data_loader import load_and_preprocess_data
 
 

@@ -1,48 +1,37 @@
 # 📡 Proyecto Colaborativo MLOps: Predicción de Churn
 
-## 🎯 Objetivo del Proyecto
-Construir un pipeline de Machine Learning modular, reproducible y colaborativo para predecir si un cliente de telecomunicaciones abandonará el servicio (**Churn**).
+## ¿Qué hace este proyecto?
 
-El proyecto simula un entorno laboral real donde **4 roles especializados** deben integrar su código en un solo repositorio usando Git.
+Pipeline de Machine Learning modular y reproducible para predecir si un cliente de telecomunicaciones abandonará el servicio (**Churn**). El proyecto simula un entorno laboral real donde **4 roles especializados** integran su código en un solo repositorio usando Git.
 
----
-
-## 📂 El Dataset
-Todos los equipos trabajarán con el dataset **Telco Customer Churn**.
-
-*   **Fuente:** [Kaggle - Telco Customer Churn](https://www.kaggle.com/blastchar/telco-customer-churn)
-*   **Archivo:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`
-*   **Problema:** Clasificación Binaria (¿El cliente se va? `Yes`/`No`)
-*   **Instrucción Importante:**
-    1.  Descarguen el CSV.
-    2.  Guárdenlo en la carpeta `data/raw/`.
-    3.  **NO suban el CSV a Git** (ya está configurado en `.gitignore` para evitar subir archivos pesados). Cada alumno debe descargarlo localmente.
+Incluye preprocesamiento de datos, entrenamiento de modelos (Random Forest / Regresión Logística), serialización del modelo entrenado y una API REST lista para producción con FastAPI.
 
 ---
 
-## 👥 Roles y Responsabilidades
+## 🏆 Resultados del Mejor Modelo
 
-1.  **Data Engineer (`src/data_loader.py`):** Limpieza de datos (imputación de valores nulos en `TotalCharges`), eliminación de identificadores y transformación de variables categóricas.
-2.  **ML Engineer (`src/trainer_model.py`):** Implementación de la fábrica de modelos (Random Forest y Regresión Logística), cálculo de métricas y serialización del modelo.
-3.  **MLOps Engineer (`src/main.py` y `config/`):** Orquestación del flujo completo, gestión de hiperparámetros en `params.yaml` y configuración de rutas dinámicas absolutas.
-4.  **QA & Production Engineer (`src/predict.py` y `tests/`):** Validación del sistema mediante pruebas unitarias (`pytest`) y preparación del script de inferencia con manejo de errores.
+Algoritmo seleccionado: `RandomForestClassifier` con configuración definida en `config/params.yaml` (100 estimadores, profundidad máxima de 10).
+
+| Métrica                | Valor  |
+|------------------------|--------|
+| Accuracy (Exactitud)   | 0.8155 |
+| Recall (Exhaustividad) | 0.5389 |
+| F1 Score               | 0.6073 |
 
 ---
 
-## 🚀 Flujo de Trabajo con Git
+## ¿Qué dataset usa y para qué sirve?
 
-1.  **Clonar:** `git clone <url-del-repo-del-equipo>`
-2.  **Ramas:** Cada alumno crea su rama:
-    *   `git checkout -b feature/data-engineer`
-    *   `git checkout -b feature/ml-engineer`
-    *   `git checkout -b feature/mlops-engineer`
-    *   `git checkout -b feature/qa-engineer`
-3.  **Desarrollo:** Trabajen en paralelo. Hagan commits frecuentes.
-4.  **Integración:**
-    *   Cuando terminen, hagan `git push` de sus ramas.
-    *   El **MLOps Engineer** debe crear un Pull Request (o merge) integrando todas las ramas a `main`.
-    *   **Resuelvan conflictos juntos** si dos personas tocaron el mismo archivo (ej. `requirements.txt` o `main.py`).
-5.  **Prueba Final:** Ejecuten `python -m src.main` en la rama `main`. Si corre, ¡misión cumplida!
+**Dataset:** [Telco Customer Churn — Kaggle](https://www.kaggle.com/datasets/blastchar/telco-custom)
+**Archivo:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`
+**Problema:** Clasificación Binaria — ¿El cliente se va? (`Yes` / `No`)
+
+Contiene 7,043 registros de clientes con variables demográficas, servicios contratados (teléfono, internet, seguridad, etc.) y datos financieros. Se usa para entrenar un clasificador binario que predice si un cliente presentará churn en el próximo ciclo.
+
+> **Instrucción importante:**
+> 1. Descarga el CSV desde el enlace de arriba.
+> 2. Guárdalo en `data/raw/`.
+> 3. **No subas el CSV a Git** (ya está en `.gitignore`). Cada miembro del equipo debe descargarlo localmente.
 
 ---
 
@@ -51,70 +40,157 @@ Todos los equipos trabajarán con el dataset **Telco Customer Churn**.
 ```text
 churn-mlops-project/
 ├── config/
-│   └── params.yaml          # Configuración centralizada
+│   └── params.yaml
 ├── data/
-│   ├── raw/                 # WA_Fn-UseC_-Telco-Customer-Churn.csv (NO SUBIR)
-│   └── processed/           # (Opcional) Datos limpios
+│   └── raw/
 ├── src/
 │   ├── __init__.py
-│   ├── data_loader.py       # Rol: Data Engineer
-│   ├── model_trainer.py     # Rol: ML Engineer
-│   ├── main.py              # Rol: MLOps Engineer
-│   └── predict.py           # Rol: QA Engineer
+│   ├── data_loader.py
+│   ├── model_trainer.py
+│   ├── main.py
+│   ├── api.py
+│   └── predict.py
 ├── tests/
 │   ├── __init__.py
-│   └── test_pipeline.py     # Rol: QA Engineer
-├── models/                  # Modelos .pkl generados (NO SUBIR o subir solo el final)
-├── requirements.txt         # Dependencias
-├── .gitignore               # Reglas de exclusión
-└── README.md                # Este archivo
+│   └── test_pipeline.py
+├── models/
+├── requirements.txt
+├── DATASET.md
+├── ETHICS.md
+├── .gitignore
+└── README.md
 ```
 
 ---
 
-## 🏆 Resultados del Mejor Modelo
+## ¿Cómo lo instalo?
 
-Tras ejecutar el pipeline y evaluar los datos de prueba, el algoritmo seleccionado dinámicamente (`RandomForestClassifier`) arrojó los siguientes resultados:
+**Requisitos:** Python 3.9+
 
-* **Accuracy (Exactitud):** 0.8155
-* **Recall (Exhaustividad):** 0.5389
-* **F1 Score:** 0.6073
+```bash
+# 1. Clonar el repositorio
+git clone <url-del-repo>
+cd churn-mlops-project
 
-*Nota: Estos resultados se obtuvieron con la configuración definida en `config/params.yaml` (100 estimadores y profundidad máxima de 10).*
+# 2. Crear entorno virtual (recomendado)
+python -m venv .venv
+source .venv/bin/activate        # Linux/macOS
+.venv\Scripts\activate           # Windows
+
+# 3. Instalar dependencias
+pip install -r requirements.txt
+```
 
 ---
 
-## 🤖 Contribución de IA (Reflexión de Integración)
+## 👥 Roles y Responsabilidades
 
-Se utilizó Inteligencia Artificial (Gemini) como apoyo técnico para resolver desafíos de arquitectura e integración en cada módulo:
+1. **Data Engineer (`src/data_loader.py`):** Limpieza de datos (imputación de valores nulos en `TotalCharges`), eliminación de identificadores y transformación de variables categóricas.
+2. **ML Engineer (`src/model_trainer.py`):** Implementación de la fábrica de modelos (Random Forest y Regresión Logística), cálculo de métricas y serialización del modelo.
+3. **MLOps Engineer (`src/main.py` y `config/`):** Orquestación del flujo completo, gestión de hiperparámetros en `params.yaml` y configuración de rutas dinámicas absolutas.
+4. **QA & Production Engineer (`src/predict.py` y `tests/`):** Validación mediante pruebas unitarias (`pytest`) y preparación del script de inferencia con manejo de errores.
 
-### Data Engineer
-* **Desafío de integración:** Garantizar la estructura exacta de los datos para el módulo de ML. La transformación de variables mediante `pd.get_dummies` fue crítica para evitar errores dimensionales durante la integración.
-* **Apoyo de IA:** Optimización de la lógica de limpieza para la columna `TotalCharges` y estructuración de la división del dataset según los parámetros del archivo de configuración.
+---
 
-### ML Engineer
-* **Desafío de integración:** Diseñar un motor de instanciación que permitiera alternar entre algoritmos (Random Forest / Regresión Logística) sin modificar el flujo principal, asegurando que el archivo `.pkl` se generara en la ubicación correcta para su consumo.
-* **Apoyo de IA:** Estructuración de la función de entrenamiento, cálculo de métricas de validación y gestión de la serialización con `joblib`.
+## 🚀 Flujo de Trabajo con Git
 
-### MLOps Engineer
-* **Desafío de integración:** Estandarizar el entorno para que fuera agnóstico a la ubicación de las carpetas. Se resolvieron errores de importación y rutas mediante la implementación de rutas absolutas dinámicas.
-* **Apoyo de IA:** Depuración de errores de sistema (`ModuleNotFoundError`) y aplicación de la librería `os` para la gestión de rutas en el script orquestador `main.py`.
+1. **Clonar:** `git clone <url-del-repo-del-equipo>`
+2. **Ramas:** Cada alumno crea su rama:
+   - `git checkout -b feature/data-engineer`
+   - `git checkout -b feature/ml-engineer`
+   - `git checkout -b feature/mlops-engineer`
+   - `git checkout -b feature/qa-engineer`
+3. **Desarrollo:** Trabajen en paralelo con commits frecuentes.
+4. **Integración:** El **MLOps Engineer** crea un Pull Request integrando todas las ramas a `main`. Resuelvan conflictos juntos si dos personas tocaron el mismo archivo.
+5. **Prueba final:** Ejecuten `python -m src.main` en `main`. Si corre, ¡misión cumplida!
 
-### QA & Production Engineer
-* **Desafío de integración:** Validar las entradas y salidas de los módulos mediante pruebas unitarias que no dependieran de la ejecución total del sistema, asegurando la robustez del script de predicción.
-* **Apoyo de IA:** Redacción de casos de prueba en `test_pipeline.py` y construcción del script de inferencia `predict.py` con manejo de excepciones para la carga del modelo.
+---
+
+## ¿Cómo lo ejecuto?
+
+### 1. Entrenar el modelo
+
+```bash
+python -m src.main
+```
+
+Carga los datos, entrena el modelo configurado en `config/params.yaml` y guarda el `.pkl` en `models/`.
+
+### 2. Ejecutar una predicción de ejemplo
+
+```bash
+python -m src.predict
+```
+
+### 3. Lanzar la API
+
+```bash
+uvicorn src.api:app --reload
+```
+
+Disponible en `http://127.0.0.1:8000`. Documentación interactiva en `http://127.0.0.1:8000/docs`.
+
+### 4. Correr las pruebas
+
+```bash
+pytest tests/
+```
+
+---
+
+## Ejemplo de llamada a la API
+
+### Con `curl`
+
+```bash
+curl -X POST "http://127.0.0.1:8000/predict" \
+     -H "Content-Type: application/json" \
+     -d '{
+           "tenure": 2,
+           "MonthlyCharges": 70.5,
+           "TotalCharges": 141.0,
+           "gender": 1,
+           "Partner": 0
+         }'
+```
+
+### Con `requests` (Python)
+
+```python
+import requests
+
+url = "http://127.0.0.1:8000/predict"
+payload = {
+    "tenure": 2,
+    "MonthlyCharges": 70.5,
+    "TotalCharges": 141.0,
+    "gender": 1,   # 1 = Female, 0 = Male
+    "Partner": 0   # 1 = Yes, 0 = No
+}
+
+response = requests.post(url, json=payload)
+print(response.json())
+# {"prediction": 1, "label": "Churn", "probability": 0.73}
+```
+
+---
+
+## 🤖 Contribución de IA
+
+Se utilizó IA (Gemini) como apoyo técnico para resolver desafíos de arquitectura e integración:
+
+- **Data Engineer:** Optimización de la limpieza de `TotalCharges` y estructuración de la división del dataset según `params.yaml`.
+- **ML Engineer:** Estructuración de la función de entrenamiento, métricas de validación y serialización con `joblib`.
+- **MLOps Engineer:** Depuración de errores de importación (`ModuleNotFoundError`) y rutas absolutas dinámicas con `os`.
+- **QA Engineer:** Redacción de casos de prueba en `test_pipeline.py` y manejo de excepciones en `predict.py`.
 
 ---
 
 ## ✅ Checklist de Entrega
 
-*   [ ] El comando `python -m src.main` ejecuta todo el pipeline sin errores.
-*   [ ] El archivo `config/params.yaml` existe y controla los hiperparámetros.
-*   [ ] Hay al menos 2 modelos diferentes implementados en el código.
-*   [ ] El script `predict.py` carga el modelo y hace una predicción de ejemplo.
-*   [ ] El historial de Git muestra contribuciones de los 4 miembros del equipo.
-*   [ ] El `README.md` final incluye los resultados obtenidos (Accuracy/Recall del mejor modelo).
-
-
-
-¡Éxito con la clase! Es un ejercicio excelente para ver quién realmente entiende la integración de sistemas. 🚀
+- [ ] `python -m src.main` ejecuta todo el pipeline sin errores.
+- [ ] `config/params.yaml` existe y controla los hiperparámetros.
+- [ ] Hay al menos 2 modelos implementados en el código.
+- [ ] `predict.py` carga el modelo y realiza una predicción de ejemplo.
+- [ ] El historial de Git muestra contribuciones de los 4 miembros.
+- [ ] El `README.md` incluye los resultados obtenidos (Accuracy / Recall del mejor modelo)

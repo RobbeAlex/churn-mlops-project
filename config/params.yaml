@@ -1,10 +1,26 @@
-data:
+external:
+  dataset_url: "https://www.kaggle.com/datasets/blastchar/telco-custom"
+
+paths:
+  # Esta llave debe ser 'raw_data' para coincidir con tu última corrección
+  raw_data: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
+  processed_data: "data/processed/"
+  model_path: "models/best_model.pkl"
+
+data_split:
   test_size: 0.2
   random_state: 42
+  stratify: True # Mantiene la proporción de Churn en train/test
+
 model:
+  # Nombre exacto que el model_trainer debe reconocer
   name: "RandomForest"
   n_estimators: 100
   max_depth: 10
-paths:
-  model_save: "models/model.pkl"
-  data_raw: "data/raw/WA_Fn-UseC-Telco-Customer-Churn.csv"
+  min_samples_split: 2
+
+# Sugerencia: Estructura para el segundo modelo (requerido por el checklist)
+alternative_model:
+  name: "LogisticRegression"
+  solver: "liblinear"
+  C: 1.0

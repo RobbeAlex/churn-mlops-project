@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score, recall_score, f1_score
 
 def train_and_save_model(X_train, y_train, X_test, y_test, config):
     model_name = config['model']['name']
-    random_state = config['data']['random_state']
+    random_state = config['data_split']['random_state']
 
     if model_name == 'RandomForest':
         model = RandomForestClassifier(
@@ -31,7 +31,7 @@ def train_and_save_model(X_train, y_train, X_test, y_test, config):
     # Guardado blindado en la raíz del proyecto
     ruta_script = os.path.abspath(__file__)
     raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
-    ruta_relativa_modelo = config['paths']['model_save'].replace('/', os.sep)
+    ruta_relativa_modelo = config['paths']['model_path'].replace('/', os.sep)
     save_path = os.path.join(raiz_proyecto, ruta_relativa_modelo)
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
