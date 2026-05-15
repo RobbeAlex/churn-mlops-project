@@ -30,9 +30,20 @@ def load_config():
 def predict_new_customer(customer_data_df):
     config = load_config()
 
-    # 3. Blindar también la ruta donde se guarda el modelo
-    ruta_relativa_modelo = config['paths']['model_save'].replace('/', os.sep)
+    # === SISTEMA DE RUTAS SEGURO Y BLINDADO ===
+    # Extrayendo la clave real 'model_path' en lugar de 'model_save'
+    config_path = config['paths']['model_path']
+
+    # Limpiamos el prefijo absoluto si se quedó pegado en el archivo de configuración
+    if config_path.startswith('/app/'):
+        config_path = config_path.replace('/app/', '', 1)
+    elif config_path.startswith('/'):
+        config_path = config_path.lstrip('/')
+
+    # Unimos la raíz del proyecto detectada con la ruta interna limpia
+    ruta_relativa_modelo = config_path.replace('/', os.sep)
     model_path = os.path.join(raiz_proyecto, ruta_relativa_modelo)
+    # ==========================================
 
     # Manejo de errores si el modelo no existe
     if not os.path.exists(model_path):
@@ -58,11 +69,8 @@ if __name__ == "__main__":
     sample_customer.loc[0] = 0
 
     # Asignar valores específicos numéricos y categóricos preprocesados
-    sample_customer['tenure'] = 2
-    sample_customer['MonthlyCharges'] = 70.5
-    sample_customer['TotalCharges'] = 141.0
-    sample_customer['gender'] = 1  # Female
-    sample_customer['Partner'] = 0  # No
+    sample_customer = pd.DataFrame(columns=X_train.columns)
+    sample_customer.loc[0] = 0
 
     print("\nEjecutando predicción para el cliente de ejemplo...")
     result = predict_new_customer(sample_customer)

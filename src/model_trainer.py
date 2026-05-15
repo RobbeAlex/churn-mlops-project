@@ -15,7 +15,9 @@ def train_and_save_model(X_train, y_train, X_test, y_test, config):
             random_state=random_state
         )
     elif model_name == 'LogisticRegression':
-        model = LogisticRegression(random_state=random_state, max_iter=1000)
+        # Buscamos 'max_iter' en la configuración; si no se define, usamos 2000 por defecto
+        max_iter_config = config['model'].get('max_iter', 2000)
+        model = LogisticRegression(random_state=random_state, max_iter=max_iter_config)
     else:
         raise ValueError(f"El modelo '{model_name}' no está soportado.")
 
@@ -28,12 +30,22 @@ def train_and_save_model(X_train, y_train, X_test, y_test, config):
         'f1_score': f1_score(y_test, y_pred)
     }
 
-    # Guardado blindado en la raíz del proyecto
-    ruta_script = os.path.abspath(__file__)
-    raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
-    ruta_relativa_modelo = config['paths']['model_path'].replace('/', os.sep)
-    save_path = os.path.join('/app', ruta_relativa_modelo)
+    # === SISTEMA DE RUTAS SEGURO Y BLINDADO ===
+    # 1. Extraemos correctamente la ruta desde la sección 'paths' del diccionario
+    config_path = config['paths']['model_path']
 
+    # 2. Limpiamos cualquier prefijo absoluto como '/app/' o '/' que cause conflictos de permisos
+    if config_path.startswith('/app/'):
+        config_path = config_path.replace('/app/', '', 1)
+    elif config_path.startswith('/'):
+        config_path = config_path.lstrip('/')
+
+    # 3. Construimos la ruta dinámica basada en la ubicación del proyecto en Codespaces
+    ruta_script = os.path.abspath(__file__)
+    raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script)) # Sube un nivel desde src/
+    save_path = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
+
+    # 4. Creación segura de directorios y guardado del artefacto binario
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     joblib.dump(model, save_path)
 

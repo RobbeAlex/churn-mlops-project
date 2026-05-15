@@ -3,7 +3,7 @@ import joblib
 import pandas as pd
 import yaml
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Configuración de rutas dinámicas para Zapopan/Windows
 ruta_script = os.path.abspath(__file__)
@@ -20,20 +20,26 @@ ruta_modelo = os.path.join(raiz_proyecto, config['paths']['model_path'].replace(
 # Cargamos el modelo y extraemos las columnas que espera
 try:
     model_data = joblib.load(ruta_modelo)
-    # Si guardaste el modelo directamente, lo asignamos.
-    # Si guardaste un dict con columnas, lo extraemos.
     model = model_data
 except Exception as e:
     print(f"Error crítico al cargar el modelo: {e}")
     model = None
 
 
+# Definimos el esquema mapeando los nombres reales con espacios mediante alias
 class ChurnInput(BaseModel):
     tenure: int
     MonthlyCharges: float
     TotalCharges: float
     gender: int
     Partner: int
+    # Mapeo de columnas Dummy con espacios usando Alias
+    InternetService_Fiber_optic: int = Field(0, alias="InternetService_Fiber optic")
+    PaymentMethod_Electronic_check: int = Field(0, alias="PaymentMethod_Electronic check")
+
+    class Config:
+        # Permite que Pydantic lea los campos tanto por el nombre de la variable como por el alias
+        populate_by_name = True
 
 
 @app.post("/predict")
@@ -42,22 +48,21 @@ async def predict(input_data: ChurnInput):
         raise HTTPException(status_code=500, detail="El modelo no está cargado.")
 
     try:
-        # 2. Crear DataFrame con la entrada
-        df_input = pd.DataFrame([input_data.dict()])
+        # 2. Crear DataFrame respetando los nombres de los alias (las columnas con espacios)
+        df_input = pd.DataFrame([input_data.model_dump(by_alias=True)])
 
         # 3. ALINEACIÓN: El modelo espera ~30 columnas por los dummies
-        # Recuperamos las columnas del entrenamiento.
-        # Si el modelo es de scikit-learn, podemos obtenerlas de sus atributos si se guardaron
         if hasattr(model, "feature_names_in_"):
             columnas_entrenamiento = model.feature_names_in_
             # Creamos un DataFrame con ceros para todas las columnas faltantes
             df_final = pd.DataFrame(0, index=[0], columns=columnas_entrenamiento)
+            
             # Llenamos solo las que el usuario envió
             for col in df_input.columns:
                 if col in df_final.columns:
                     df_final[col] = df_input[col]
         else:
-            # Si no tenemos feature_names_in_, pasamos el DF tal cual (esto podría dar error)
+            # Si no tenemos feature_names_in_, pasamos el DF tal cual
             df_final = df_input
 
         # 4. Predicción
@@ -71,5 +76,4 @@ async def predict(input_data: ChurnInput):
         }
 
     except Exception as e:
-        # Esto imprimirá el error real en tu terminal de PyCharm
         raise HTTPException(status_code=500, detail=str(e))
