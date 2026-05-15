@@ -39,26 +39,29 @@ Contiene 7,043 registros de clientes con variables demográficas, servicios cont
 
 ```text
 churn-mlops-project/
+├── .dockerignore
+├── .gitignore
+├── Dockerfile
+├── DATASET.md
+├── ETHICS.md
+├── README.md
+├── Tarea__Proyecto_Telco_Customer_Churn.pdf
 ├── config/
 │   └── params.yaml
 ├── data/
 │   └── raw/
-├── src/
-│   ├── __init__.py
-│   ├── data_loader.py
-│   ├── model_trainer.py
-│   ├── main.py
-│   ├── api.py
-│   └── predict.py
-├── tests/
-│   ├── __init__.py
-│   └── test_pipeline.py
+├── download_dataset.py
+├── docker-compose.yml
 ├── models/
 ├── requirements.txt
-├── DATASET.md
-├── ETHICS.md
-├── .gitignore
-└── README.md
+├── src/
+│   ├── api.py
+│   ├── data_loader.py
+│   ├── main.py
+│   ├── model_trainer.py
+│   └── predict.py
+└── test/
+    └── test_pipeline.py
 ```
 
 ---
@@ -80,6 +83,14 @@ source .venv/bin/activate        # Linux/macOS
 # 3. Instalar dependencias
 pip install -r requirements.txt
 ```
+---
+
+## Descripción breve de los scripts adicionales
+
+- **download_dataset.py**: Descarga automática del dataset de churn si el archivo no existe en `data/raw/`.
+- **Dockerfile**: Configura todo el entorno (dependencias y scripts) en una imagen de Docker.
+- **docker-compose.yml**: Orquesta los servicios de entrenamiento (`train`) y despliegue de la API (`api`).
+- **config/params.yaml**: Control centralizado de hiperparámetros y división entre train/test.
 
 ---
 
