@@ -1,5 +1,8 @@
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
+import os
+
+os.makedirs('data/raw', exist_ok=True)
 
 # Path bajo data/raw
 file_path = "WA_Fn-UseC_-Telco-Customer-Churn.csv"
