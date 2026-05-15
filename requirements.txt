@@ -8,9 +8,9 @@ h11==0.16.0
 idna==3.15
 iniconfig==2.3.0
 joblib==1.5.3
-numpy==2.4.4
 packaging==26.2
-pandas==3.0.3
+numpy==1.26.4
+pandas==2.2.2
 pluggy==1.6.0
 pydantic==2.13.4
 pydantic_core==2.46.4
