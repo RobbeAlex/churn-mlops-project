@@ -4,8 +4,11 @@ import pandas as pd
 import yaml
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
+<<<<<<< HEAD
 from pydantic import BaseModel, Field
+=======
 from pydantic import BaseModel, Field, ConfigDict
+>>>>>>> 8628f07b7c15fe61d61cc0d2b58470e0ec0504d1
 
 # Ruta raíz del proyecto (robusto dentro y fuera de Docker)
 raiz_proyecto = os.environ.get("PROJECT_ROOT", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,6 +22,7 @@ async def lifespan(app: FastAPI):
     with open(os.path.join(raiz_proyecto, 'config', 'params.yaml'), 'r') as f:
         config = yaml.safe_load(f)
 
+<<<<<<< HEAD
     ruta_modelo = os.path.join(raiz_proyecto, config['paths']['model_path'].replace('/', os.sep))
     model = joblib.load(ruta_modelo)
     yield
@@ -28,6 +32,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Churn Prediction API - UDG", lifespan=lifespan)
 
 
+=======
 ruta_modelo = os.path.join(raiz_proyecto, config['paths']['model_path'].replace('/', os.sep))
 
 # Cargamos el modelo y extraemos las columnas que espera
@@ -40,6 +45,7 @@ except Exception as e:
 
 
 # Definimos el esquema mapeando los nombres reales con espacios mediante alias
+>>>>>>> 8628f07b7c15fe61d61cc0d2b58470e0ec0504d1
 class ChurnInput(BaseModel):
     gender: int
     SeniorCitizen: int
@@ -47,6 +53,7 @@ class ChurnInput(BaseModel):
     tenure: int
     MonthlyCharges: float
     TotalCharges: float
+<<<<<<< HEAD
     Dependents_Yes: int
     PhoneService_Yes: int
     MultipleLines_No_phone_service: int = Field(alias="MultipleLines_No phone service")
@@ -73,6 +80,7 @@ class ChurnInput(BaseModel):
     PaymentMethod_Mailed_check: int = Field(alias="PaymentMethod_Mailed check")
 
     model_config = {"populate_by_name": True}
+=======
     gender: int
     Partner: int
     InternetService_Fiber_optic: int = Field(0, alias="InternetService_Fiber optic")
@@ -80,6 +88,7 @@ class ChurnInput(BaseModel):
 
     # Sintaxis oficial moderna para Pydantic v2
     model_config = ConfigDict(populate_by_name=True)
+>>>>>>> 8628f07b7c15fe61d61cc0d2b58470e0ec0504d1
 
 
 @app.post("/predict")
@@ -88,19 +97,31 @@ async def predict(input_data: ChurnInput):
         raise HTTPException(status_code=500, detail="El modelo no está cargado.")
 
     try:
+<<<<<<< HEAD
         df_input = pd.DataFrame([input_data.dict(by_alias=True)])
 
+=======
         # 2. Crear DataFrame respetando los nombres de los alias (las columnas con espacios)
         df_input = pd.DataFrame([input_data.model_dump(by_alias=True)])
 
         # 3. ALINEACIÓN: El modelo espera ~30 columnas por los dummies
+>>>>>>> 8628f07b7c15fe61d61cc0d2b58470e0ec0504d1
         if hasattr(model, "feature_names_in_"):
             columnas_entrenamiento = model.feature_names_in_
             df_final = pd.DataFrame(0, index=[0], columns=columnas_entrenamiento)
+<<<<<<< HEAD
+=======
+            
+            # Llenamos solo las que el usuario envió
+>>>>>>> 8628f07b7c15fe61d61cc0d2b58470e0ec0504d1
             for col in df_input.columns:
                 if col in df_final.columns:
                     df_final[col] = df_input[col]
         else:
+<<<<<<< HEAD
+=======
+            # Si no tenemos feature_names_in_, pasamos el DF tal cual
+>>>>>>> 8628f07b7c15fe61d61cc0d2b58470e0ec0504d1
             df_final = df_input
 
         pred = model.predict(df_final)[0]
