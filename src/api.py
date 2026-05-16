@@ -66,11 +66,12 @@ class ChurnInput(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 @app.post("/predict")
-async def predict(input_data: ChurnInput):
-    if model is None:
-        raise HTTPException(status_code=500, detail="El modelo no está cargado.")
+async def predict(payload: ChurnInput):
     try:
-        df_input = pd.DataFrame([input_data.dict(by_alias=True)])
+        return {"prediction": int(pred), "probability": float(prob)}
+    except Exception as e:
+        print(f"Error en la predicción: {e}")
+        raise HTTPException(status_code=400, detail=f"Error en la predicción: {e}")
 
         # 2. Crear DataFrame respetando los nombres de los alias (las columnas con espacios)
         df_input = pd.DataFrame([input_data.model_dump(by_alias=True)])
