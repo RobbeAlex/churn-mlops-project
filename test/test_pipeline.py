@@ -47,8 +47,8 @@ def test_load_and_preprocess_data_integrity(config):
 
 def test_train_and_save_model_logic(config, tmp_path):
     """
-    Prueba el entrenamiento usando la nueva firma de función compatible con DVC.
-    Crea archivos procesados reducidos temporales para simular el pipeline.
+    Prueba la lógica de entrenamiento usando la nueva firma de función compatible con DVC.
+    Alinea las rutas de guardado para simular con precisión el entorno de ejecución.
     """
     # 1. Ejecutar el procesado inicial para extraer la estructura de los datos
     X_train, X_test, y_train, y_test = load_and_preprocess_data(config)
@@ -61,43 +61,38 @@ def test_train_and_save_model_logic(config, tmp_path):
     train_df = pd.concat([X_train_sub, y_train_sub], axis=1)
     test_df = pd.concat([X_test_sub, y_test_sub], axis=1)
 
-    # 3. Sobrescribir temporalmente las rutas de los datos procesados en disco
-    # Usamos carpetas temporales de pytest para no alterar tus archivos reales de data/processed/
-    temp_processed_dir = tmp_path / "data" / "processed"
-    os.makedirs(temp_processed_dir, exist_ok=True)
-    
-    train_path = os.path.join(temp_processed_dir, 'train.csv')
-    test_path = os.path.join(temp_processed_dir, 'test.csv')
-    
-    train_df.to_csv(train_path, index=False)
-    test_df.to_csv(test_path, index=False)
-
-    # 4. Modificar la configuración dinámica del test para apuntar a los temporales
-    # Parcheamos los métodos de lectura locales modificando las rutas relativas en memoria
-    config['model']['name'] = 'LogisticRegression'
-    temp_model_path = tmp_path / "test_model.pkl"
-    config['paths']['model_path'] = str(temp_model_path)
-
-    # Modificamos temporalmente el entorno de trabajo del script o inyectamos las rutas mockeadas al disco
-    # Para asegurar que model_trainer lea estos archivos específicos del test, modificamos la raíz del proyecto en el script temporalmente:
+    # 3. Escribir un lote de control rápido directo en el área de procesamiento local 
+    # para que model_trainer lo consuma de forma nativa sin romper el flujo del disco
     real_processed_dir = os.path.join(raiz_proyecto, 'data', 'processed')
     os.makedirs(real_processed_dir, exist_ok=True)
     
-    backup_train_exists = os.path.exists(os.path.join(real_processed_dir, 'train.csv'))
-    
-    # Escribimos un lote de control rápido directo en el área de procesamiento local para que model_trainer lo consuma de forma nativa
     test_train_path = os.path.join(real_processed_dir, 'train.csv')
     test_test_path = os.path.join(real_processed_dir, 'test.csv')
     
     train_df.to_csv(test_train_path, index=False)
     test_df.to_csv(test_test_path, index=False)
 
-    # 5. LLAMADA CORREGIDA: Ahora toma únicamente un argumento posicional (config)
+    # 4. Modificar la configuración dinámica del test
+    config['model']['name'] = 'LogisticRegression'
+    
+    # IMPORTANTE: Usamos una ruta relativa para que no choque con el os.path.join(raiz_proyecto, ...) de model_trainer
+    nombre_modelo_test = "test_model_pipeline.pkl"
+    config['paths']['model_path'] = f"models/{nombre_modelo_test}"
+
+    # 5. Ejecutar entrenamiento con la firma correcta de un solo argumento
     metrics = train_and_save_model(config)
 
+    # 6. Calcular con precisión milimétrica la ruta donde model_trainer guardó el archivo
+    ruta_esperada_modelo = os.path.join(raiz_proyecto, 'models', nombre_modelo_test)
+
     # Validaciones del entrenamiento
+    assert metrics is not None, "La función de entrenamiento debería retornar el diccionario de métricas."
     assert 'accuracy' in metrics, "La clave 'accuracy' no está presente en las métricas resultantes"
-    assert os.path.exists(str(temp_model_path)), "El modelo binario .pkl no se guardó en la ruta del entorno de prueba"
+    assert os.path.exists(ruta_esperada_modelo), f"El modelo binario no se encontró en la ruta calculada de producción: {ruta_esperada_modelo}"
+    
+    # Limpieza post-test: Evita dejar archivos temporales en tu carpeta 'models/' local o de GitHub Actions
+    if os.path.exists(ruta_esperada_modelo):
+        os.remove(ruta_esperada_modelo)
 
 
 def test_api_predict_endpoint():
