@@ -1,18 +1,17 @@
+import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import os
 
 
 def load_and_preprocess_data(config):
-    """Carga y preprocesa los datos según los parámetros de configuración."""
+    """Carga, preprocesa los datos y los guarda en archivos procesados para el pipeline."""
 
     # 1. Construir la ruta absoluta de forma dinámica
     ruta_script = os.path.abspath(__file__)
     directorio_src = os.path.dirname(ruta_script)
     raiz_proyecto = os.path.dirname(directorio_src)
 
-    # 2. Extraer la ruta relativa del YAML y unirla con la raíz del proyecto
-    # Usamos replace para evitar problemas entre diagonales de Windows (\) y Linux/Mac (/)
+    # 2. Obtener rutas desde la configuración yaml
     ruta_relativa_csv = config['paths']['raw_data'].replace('/', os.sep)
     ruta_csv_absoluta = os.path.join(raiz_proyecto, ruta_relativa_csv)
 
@@ -31,17 +30,32 @@ def load_and_preprocess_data(config):
     df['Partner'] = df['Partner'].map({'Yes': 1, 'No': 0})
     df['Churn'] = df['Churn'].map({'Yes': 1, 'No': 0})
 
-    # Transformar el resto de variables categóricas en dummies para que el modelo no falle
+    # Transformar el resto de variables categóricas en dummies
     X = df.drop(columns=['Churn'])
     X = pd.get_dummies(X, drop_first=True)
     y = df['Churn']
 
-    # Dividir el dataset usando los parámetros de configuración
+    # Dividir el dataset asegurando la estratificación del target
     X_train, X_test, y_train, y_test = train_test_split(
         X, y,
         test_size=config['data_split']['test_size'],
-        random_state=config['data_split']['random_state']
+        random_state=config['data_split']['random_state'],
+        stratify=y
     )
 
-    return X_train, X_test, y_train, y_test
+    # Combinar características y targets para guardarlos de forma estructurada
+    train_df = pd.concat([X_train, y_train], axis=1)
+    test_df = pd.concat([X_test, y_test], axis=1)
+
+    # Definir rutas de guardado dentro de data/processed/
+    processed_dir = os.path.join(raiz_proyecto, 'data', 'processed')
+    os.makedirs(processed_dir, exist_ok=True)
+
+    train_path = os.path.join(processed_dir, 'train.csv')
+    test_path = os.path.join(processed_dir, 'test.csv')
+
+    train_df.to_csv(train_path, index=False)
+    test_df.to_csv(test_path, index=False)
+
+    print(f"   [DVC DATA] Conjuntos de datos guardados exitosamente en: {processed_dir}")
     return X_train, X_test, y_train, y_test
