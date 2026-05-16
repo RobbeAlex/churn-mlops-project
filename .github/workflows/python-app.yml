@@ -44,4 +44,5 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest
+          rm -f mlflow.db
+          ./.venv/bin/pytest -s
