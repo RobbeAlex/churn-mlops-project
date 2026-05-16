@@ -1,31 +1,38 @@
-# 1. Imagen base ligera de Python
-FROM python:3.11-slim
+# ETAPA 1: Construcción (Builder)
+# Utilizamos una imagen base ligera de Python
+FROM python:3.11-slim as builder
 
-# 2. Establecer el directorio de trabajo dentro del contenedor
+# Configuramos variables de entorno para evitar que Python escriba archivos .pyc
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# 3. Evitar que Python genere archivos .pyc y permitir logs en tiempo real
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-# CRITICAL: Configurar PYTHONPATH para que reconozca el módulo 'src'
-ENV PYTHONPATH=/app
-
-# 4. Instalar dependencias del sistema necesarias (si las hubiera)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# 5. Copiar solo el archivo de requerimientos primero para aprovechar la caché de Docker
+# Copiamos solo los requerimientos primero para aprovechar la caché de Docker
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# 6. Copiar
-# Asegúrate de haber limpiado el .dockerignore antes de este paso
-COPY . .
+# Instalamos las dependencias en una carpeta específica
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
-# 7. Exponer el puerto de FastAPI
+# ETAPA 2: Producción (Final)
+FROM python:3.11-slim
+
+# Creamos un usuario sin privilegios llamado 'appuser' por seguridad
+RUN useradd -m -r appuser
+
+WORKDIR /app
+
+# Copiamos las dependencias instaladas desde la etapa de construcción
+COPY --from=builder /install /usr/local
+
+# Copiamos el código fuente y cambiamos el propietario al 'appuser'
+COPY --chown=appuser:appuser . .
+
+# Cambiamos al usuario sin privilegios
+USER appuser
+
+# Exponemos el puerto de FastAPI
 EXPOSE 8000
 
-# 8. Comando por defecto (Lanzar la API)
-# Usamos el formato de módulo para que uvicorn encuentre src/api.py
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Comando para ejecutar la aplicación
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
