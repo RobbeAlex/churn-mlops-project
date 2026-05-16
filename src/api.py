@@ -10,6 +10,10 @@ from pydantic import BaseModel, Field, ConfigDict
 # Ruta raíz del proyecto (robusto dentro y fuera de Docker)
 raiz_proyecto = os.environ.get("PROJECT_ROOT", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Cargar configuración global
+with open(os.path.join(raiz_proyecto, 'config', 'params.yaml'), 'r') as f:
+    config = yaml.safe_load(f)
+
 # Variable global del modelo
 model = None
 
