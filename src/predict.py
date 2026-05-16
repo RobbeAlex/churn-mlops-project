@@ -1,74 +1,117 @@
 import os
-import sys
 import joblib
 import pandas as pd
 import yaml
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel, ConfigDict
 
-ruta_script = os.path.abspath(__file__)
-directorio_src = os.path.dirname(ruta_script)
-raiz_proyecto = os.path.dirname(directorio_src)
+raiz_proyecto = os.environ.get("PROJECT_ROOT", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def load_config():
-    ruta_config = os.path.join(raiz_proyecto, 'config', 'params.yaml')
-    try:
-        with open(ruta_config, 'r') as file:
-            return yaml.safe_load(file)
-    except FileNotFoundError:
-        print(f"Error crítico: No se encontró el archivo de configuración en '{ruta_config}'.")
-        sys.exit(1)
+with open(os.path.join(raiz_proyecto, 'config', 'params.yaml'), 'r') as f:
+    config = yaml.safe_load(f)
 
-def predict_new_customer(customer_data_dict):
-    config = load_config()
+model = None
 
-    # Cargar el modelo entrenado
-    config_path = config['paths']['model_path']
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global model
+    with open(os.path.join(raiz_proyecto, 'config', 'params.yaml'), 'r') as f:
+        config_lifespan = yaml.safe_load(f)
+
+    config_path = config_lifespan['paths']['model_path']
     if config_path.startswith('/app/'):
         config_path = config_path.replace('/app/', '', 1)
     elif config_path.startswith('/'):
         config_path = config_path.lstrip('/')
-    ruta_modelo = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
-    
-    if not os.path.exists(ruta_modelo):
-        print(f"Error crítico: No se encontró un modelo entrenado en '{ruta_modelo}'.")
-        sys.exit(1)
+        
+    ruta_modelo_lifespan = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
+    model = joblib.load(ruta_modelo_lifespan)
+    yield
+    model = None
 
-    model = joblib.load(ruta_modelo)
+app = FastAPI(title="Churn Prediction API - UDG", lifespan=lifespan)
 
-    # Convertir datos crudos del usuario a DataFrame
-    cliente_df = pd.DataFrame([customer_data_dict])
+# Carga preventiva inicial
+config_path_init = config['paths']['model_path']
+if config_path_init.startswith('/app/'):
+    config_path_init = config_path_init.replace('/app/', '', 1)
+elif config_path_init.startswith('/'):
+    config_path_init = config_path_init.lstrip('/')
+ruta_modelo_init = os.path.join(raiz_proyecto, config_path_init.replace('/', os.sep))
 
-    # Aplicar exactamente el mismo mapeo binario manual que en el entrenamiento
-    cliente_df['gender'] = cliente_df['gender'].map({'Female': 1, 'Male': 0})
-    cliente_df['Partner'] = cliente_df['Partner'].map({'Yes': 1, 'No': 0})
-    if 'Churn' in cliente_df.columns:
-        cliente_df = cliente_df.drop(columns=['Churn'])
-
-    # Aplicar One-Hot Encoding para las variables de texto restantes
-    cliente_procesado = pd.get_dummies(cliente_df)
-
-    # ALINEACIÓN ULTRA-EFICIENTE usando la metadata nativa del modelo entrenado
-    if hasattr(model, "feature_names_in_"):
-        all_columns = model.feature_names_in_
-        cliente_procesado = cliente_procesado.reindex(columns=all_columns, fill_value=0)
+try:
+    if os.path.exists(ruta_modelo_init):
+        model = joblib.load(ruta_modelo_init)
     else:
-        print("Advertencia: El modelo no contiene el atributo 'feature_names_in_'.")
+        print(f"Aviso: El archivo del modelo no se encontró en la ruta inicial: {ruta_modelo_init}")
+except Exception as e:
+    print(f"Error crítico al cargar el modelo de respaldo: {e}")
+    model = None
 
-    pred = model.predict(cliente_procesado)[0]
-    prob = model.predict_proba(cliente_procesado)[0][1]
 
-    return {
-        "prediction": int(pred),
-        "label": "Churn" if pred == 1 else "No Churn",
-        "probability": round(float(prob), 2)
-    }
+class ChurnInput(BaseModel):
+    gender: str
+    SeniorCitizen: int
+    Partner: int
+    Dependents: int
+    tenure: int
+    PhoneService: int
+    MultipleLines: str
+    InternetService: str
+    OnlineSecurity: str
+    OnlineBackup: str
+    DeviceProtection: str
+    TechSupport: str
+    StreamingTV: str
+    StreamingMovies: str
+    Contract: str
+    PaperlessBilling: int
+    PaymentMethod: str
+    MonthlyCharges: float
+    TotalCharges: float
+    
+    model_config = ConfigDict(populate_by_name=True)
 
-if __name__ == "__main__":
-    ejemplo_cliente = {
-        "gender": "Male", "SeniorCitizen": 0, "Partner": 1, "Dependents": 0,
-        "tenure": 5, "PhoneService": 1, "MultipleLines": "No", "InternetService": "DSL",
-        "OnlineSecurity": "No", "OnlineBackup": "Yes", "DeviceProtection": "No",
-        "TechSupport": "No", "StreamingTV": "No", "StreamingMovies": "No",
-        "Contract": "Month-to-month", "PaperlessBilling": 1, "PaymentMethod": "Electronic check",
-        "MonthlyCharges": 80.0, "TotalCharges": 400.0
-    }
-    print("Resultado de la predicción de prueba:", predict_new_customer(ejemplo_cliente))
+
+@app.post("/predict")
+async def predict(payload: ChurnInput):
+    if model is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="El modelo predictivo no se encuentra cargado en el servidor."
+        )
+    try:
+        # 1. Crear DataFrame inicial con los datos crudos del JSON recibido
+        df_input = pd.DataFrame([payload.model_dump(by_alias=True)])
+        
+        # 2. Aplicar exactamente las mismas transformaciones básicas del pipeline
+        df_input['gender'] = df_input['gender'].map({'Female': 1, 'Male': 0})
+        df_input['Partner'] = df_input['Partner'].map({'Yes': 1, 'No': 0})
+        
+        # Aplicar dummificación instantánea para variables categóricas de texto
+        df_procesado = pd.get_dummies(df_input)
+        
+        # 3. Alineación directa usando el vector de características del entrenamiento
+        if hasattr(model, "feature_names_in_"):
+            columnas_entrenamiento = model.feature_names_in_
+            df_final = df_procesado.reindex(columns=columnas_entrenamiento, fill_value=0)
+        else:
+            df_final = df_procesado
+
+        # 4. Inferencia
+        pred = model.predict(df_final)[0]
+        prob = model.predict_proba(df_final)[0][1]
+
+        return {
+            "prediction": int(pred),
+            "label": "Churn" if pred == 1 else "No Churn",
+            "probability": round(float(prob), 2)
+        }
+
+    except Exception as e:
+        print(f"Error crítico en la predicción de la API: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=f"Error al procesar la predicción: {str(e)}"
+        )
