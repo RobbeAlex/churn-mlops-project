@@ -87,7 +87,6 @@ def train_and_save_model(X_train, y_train, X_test, y_test, config):
         'f1_score': f1_score(y_test, y_pred)
     }
 
-
     # Guardado blindado en la raíz del proyecto
     ruta_script = os.path.abspath(__file__)
     raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
