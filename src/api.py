@@ -5,6 +5,7 @@ import yaml
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 # Ruta raíz del proyecto (robusto dentro y fuera de Docker)
 raiz_proyecto = os.environ.get("PROJECT_ROOT", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -27,6 +28,18 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Churn Prediction API - UDG", lifespan=lifespan)
 
 
+ruta_modelo = os.path.join(raiz_proyecto, config['paths']['model_path'].replace('/', os.sep))
+
+# Cargamos el modelo y extraemos las columnas que espera
+try:
+    model_data = joblib.load(ruta_modelo)
+    model = model_data
+except Exception as e:
+    print(f"Error crítico al cargar el modelo: {e}")
+    model = None
+
+
+# Definimos el esquema mapeando los nombres reales con espacios mediante alias
 class ChurnInput(BaseModel):
     gender: int
     SeniorCitizen: int
@@ -60,6 +73,13 @@ class ChurnInput(BaseModel):
     PaymentMethod_Mailed_check: int = Field(alias="PaymentMethod_Mailed check")
 
     model_config = {"populate_by_name": True}
+    gender: int
+    Partner: int
+    InternetService_Fiber_optic: int = Field(0, alias="InternetService_Fiber optic")
+    PaymentMethod_Electronic_check: int = Field(0, alias="PaymentMethod_Electronic check")
+
+    # Sintaxis oficial moderna para Pydantic v2
+    model_config = ConfigDict(populate_by_name=True)
 
 
 @app.post("/predict")
@@ -70,6 +90,10 @@ async def predict(input_data: ChurnInput):
     try:
         df_input = pd.DataFrame([input_data.dict(by_alias=True)])
 
+        # 2. Crear DataFrame respetando los nombres de los alias (las columnas con espacios)
+        df_input = pd.DataFrame([input_data.model_dump(by_alias=True)])
+
+        # 3. ALINEACIÓN: El modelo espera ~30 columnas por los dummies
         if hasattr(model, "feature_names_in_"):
             columnas_entrenamiento = model.feature_names_in_
             df_final = pd.DataFrame(0, index=[0], columns=columnas_entrenamiento)

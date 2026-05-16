@@ -6,6 +6,7 @@ paths:
   raw_data: "data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv"
   processed_data: "data/processed/"
   model_path: "models/best_model.pkl"
+  model_path: "models/model.pkl"
 
 data_split:
   test_size: 0.2
@@ -16,6 +17,9 @@ model:
   # Nombre exacto que el model_trainer debe reconocer
   name: "RandomForest"
   n_estimators: 100
+  model:
+  name: "LogisticRegression"
+  max_iter: 3000
   max_depth: 10
   min_samples_split: 2
 
