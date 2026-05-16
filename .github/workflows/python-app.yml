@@ -47,7 +47,7 @@ jobs:
           rm -f mlflow.db
           python -m pytest -s
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+    - name: Upload coverage reports to Codecov
+    uses: codecov/codecov-action@v5
+    with:
+      token: ${{ secrets.CODECOV_TOKEN }}
