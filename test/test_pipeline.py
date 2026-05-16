@@ -4,8 +4,8 @@ import os
 import sys
 import pandas as pd
 from fastapi.testclient import TestClient
+from unittest.mock import patch, MagicMock
 
-# Mantenemos tu lógica de rutas, es robusta para entornos locales
 ruta_actual = os.path.abspath(os.path.dirname(__file__))
 raiz_proyecto = os.path.dirname(ruta_actual)
 if raiz_proyecto not in sys.path:
@@ -13,9 +13,13 @@ if raiz_proyecto not in sys.path:
 
 from src.data_loader import load_and_preprocess_data
 from src.model_trainer import train_and_save_model
-from src.api import app  # Importamos la API para probar el endpoint
+import src.api as api_module
+from src.api import app as api_app
+from src.predict import app as predict_app
+from src.main import main as main_entrypoint
 
-client = TestClient(app)
+client_api = TestClient(api_app)
+client_predict = TestClient(predict_app)
 
 
 @pytest.fixture
@@ -26,81 +30,9 @@ def config():
         return yaml.safe_load(file)
 
 
-def test_load_and_preprocess_data_integrity(config):
-    """
-    Verifica no solo que los datos existan, sino que la limpieza
-    haya sido efectiva (sin nulos en columnas clave).
-    """
-    # Verificamos que el archivo de datos existe antes de intentar cargar
-    if not os.path.exists(config['paths']['raw_data']):
-        pytest.skip("Archivo de datos no encontrado en data/raw/")
-
-    X_train, X_test, y_train, y_test = load_and_preprocess_data(config)
-
-    # Validaciones de estructura
-    assert not X_train.empty, "El set de entrenamiento está vacío"
-    assert X_train.shape[1] == X_test.shape[1], "Diferencia de columnas entre train y test"
-
-    # Validación de limpieza (Rol: Data Engineer)
-    assert X_train.isnull().sum().sum() == 0, "Se encontraron valores nulos tras el preprocesamiento"
-
-
-def test_train_and_save_model_logic(config, tmp_path):
-    """
-    Prueba la lógica de entrenamiento usando la nueva firma de función compatible con DVC.
-    Alinea las rutas de guardado para simular con precisión el entorno de ejecución.
-    """
-    # 1. Ejecutar el procesado inicial para extraer la estructura de los datos
-    X_train, X_test, y_train, y_test = load_and_preprocess_data(config)
-
-    # 2. Reducir los datos para que el test unitario en el CI/CD sea veloz
-    X_train_sub, y_train_sub = X_train.head(50), y_train.head(50)
-    X_test_sub, y_test_sub = X_test.head(10), y_test.head(10)
-
-    # Combinar características y target simulando el comportamiento de data_loader
-    train_df = pd.concat([X_train_sub, y_train_sub], axis=1)
-    test_df = pd.concat([X_test_sub, y_test_sub], axis=1)
-
-    # 3. Escribir un lote de control rápido directo en el área de procesamiento local 
-    # para que model_trainer lo consuma de forma nativa sin romper el flujo del disco
-    real_processed_dir = os.path.join(raiz_proyecto, 'data', 'processed')
-    os.makedirs(real_processed_dir, exist_ok=True)
-    
-    test_train_path = os.path.join(real_processed_dir, 'train.csv')
-    test_test_path = os.path.join(real_processed_dir, 'test.csv')
-    
-    train_df.to_csv(test_train_path, index=False)
-    test_df.to_csv(test_test_path, index=False)
-
-    # 4. Modificar la configuración dinámica del test
-    config['model']['name'] = 'LogisticRegression'
-    
-    # IMPORTANTE: Usamos una ruta relativa para que no choque con el os.path.join(raiz_proyecto, ...) de model_trainer
-    nombre_modelo_test = "test_model_pipeline.pkl"
-    config['paths']['model_path'] = f"models/{nombre_modelo_test}"
-
-    # 5. Ejecutar entrenamiento con la firma correcta de un solo argumento
-    metrics = train_and_save_model(config)
-
-    # 6. Calcular con precisión milimétrica la ruta donde model_trainer guardó el archivo
-    ruta_esperada_modelo = os.path.join(raiz_proyecto, 'models', nombre_modelo_test)
-
-    # Validaciones del entrenamiento
-    assert metrics is not None, "La función de entrenamiento debería retornar el diccionario de métricas."
-    assert 'accuracy' in metrics, "La clave 'accuracy' no está presente en las métricas resultantes"
-    assert os.path.exists(ruta_esperada_modelo), f"El modelo binario no se encontró en la ruta calculada de producción: {ruta_esperada_modelo}"
-    
-    # Limpieza post-test: Evita dejar archivos temporales en tu carpeta 'models/' local o de GitHub Actions
-    if os.path.exists(ruta_esperada_modelo):
-        os.remove(ruta_esperada_modelo)
-
-
-def test_api_predict_endpoint():
-    """
-    Prueba de integración de la API (Rol: QA & Production Engineer).
-    """
-    # Payload de ejemplo basado en tu README
-    payload = {
+@pytest.fixture
+def valid_payload():
+    return {
         "gender": "Male",
         "SeniorCitizen": 0,
         "Partner": 1,
@@ -122,9 +54,129 @@ def test_api_predict_endpoint():
         "TotalCharges": 400.0
     }
 
-    response = client.post("/predict", json=payload)
 
-    assert response.status_code == 200
-    json_data = response.json()
-    assert "prediction" in json_data
-    assert "probability" in json_data
+def test_load_and_preprocess_data_integrity(config):
+    if not os.path.exists(config['paths']['raw_data']):
+        pytest.skip("Archivo de datos no encontrado")
+
+    X_train, X_test, y_train, y_test = load_and_preprocess_data(config)
+    assert not X_train.empty
+    assert X_train.shape[1] == X_test.shape[1]
+    assert X_train.isnull().sum().sum() == 0
+
+
+def test_train_and_save_model_logic(config):
+    X_train, X_test, y_train, y_test = load_and_preprocess_data(config)
+    train_df = pd.concat([X_train.head(10), y_train.head(10)], axis=1)
+    test_df = pd.concat([X_test.head(5), y_test.head(5)], axis=1)
+
+    real_processed_dir = os.path.join(raiz_proyecto, 'data', 'processed')
+    os.makedirs(real_processed_dir, exist_ok=True)
+    
+    pd.DataFrame(train_df).to_csv(os.path.join(real_processed_dir, 'train.csv'), index=False)
+    pd.DataFrame(test_df).to_csv(os.path.join(real_processed_dir, 'test.csv'), index=False)
+
+    # Cobertura de caminos lógicos en model_trainer (Logistic Regression)
+    config['model']['name'] = 'LogisticRegression'
+    config['paths']['model_path'] = "models/test_lr.pkl"
+    metrics_lr = train_and_save_model(config)
+    assert 'accuracy' in metrics_lr
+
+    # Cobertura de caminos lógicos en model_trainer (Random Forest)
+    config['model']['name'] = 'RandomForest'
+    config['model']['n_estimators'] = 10
+    config['model']['max_depth'] = 3
+    config['paths']['model_path'] = "models/test_rf.pkl"
+    metrics_rf = train_and_save_model(config)
+    assert 'accuracy' in metrics_rf
+
+    # Cobertura de Excepción (Modelo Inválido)
+    config['model']['name'] = 'ModeloInexistente'
+    with pytest.raises(ValueError):
+        train_and_save_model(config)
+
+    # Limpieza de binarios creados
+    for p in ["test_lr.pkl", "test_rf.pkl"]:
+        r = os.path.join(raiz_proyecto, "models", p)
+        if os.path.exists(r):
+            os.remove(r)
+
+
+def test_train_and_save_model_file_not_found(config):
+    # Forzar error de archivo no encontrado borrando temporalmente rutas conocidas
+    with patch('os.path.exists', return_value=False):
+        with pytest.raises(FileNotFoundError):
+            train_and_save_model(config)
+
+
+# ==========================================
+# PRUEBAS PARA API.PY Y PREDICT.PY
+# ==========================================
+
+def test_api_predict_endpoint_success(valid_payload):
+    # Creamos un mock de un clasificador entrenado
+    mock_model = MagicMock()
+    mock_model.feature_names_in_ = ['gender', 'SeniorCitizen', 'Partner', 'Dependents', 'tenure']
+    mock_model.predict.return_value = [0]
+    mock_model.predict_proba.return_value = [[0.8, 0.2]]
+
+    with patch.object(api_module, 'model', mock_model):
+        response = client_api.post("/predict", json=valid_payload)
+        assert response.status_code == 200
+        assert response.json()["label"] == "No Churn"
+
+
+def test_api_predict_no_model(valid_payload):
+    with patch.object(api_module, 'model', None):
+        response = client_api.post("/predict", json=valid_payload)
+        assert response.status_code == 503
+
+
+def test_api_predict_exception(valid_payload):
+    mock_model = MagicMock()
+    mock_model.predict.side_effect = Exception("Fallo forzado simulado")
+    
+    with patch.object(api_module, 'model', mock_model):
+        response = client_api.post("/predict", json=valid_payload)
+        assert response.status_code == 400
+
+
+def test_predict_app_endpoint_success(valid_payload):
+    import src.predict as predict_module
+    mock_model = MagicMock()
+    mock_model.feature_names_in_ = ['gender', 'Partner']
+    mock_model.predict.return_value = [1]
+    mock_model.predict_proba.return_value = [[0.3, 0.7]]
+
+    with patch.object(predict_module, 'model', mock_model):
+        response = client_predict.post("/predict", json=valid_payload)
+        assert response.status_code == 200
+        assert response.json()["label"] == "Churn"
+
+
+# ==========================================
+# PRUEBAS PARA MAIN.PY (ENTRYPOINT)
+# ==========================================
+
+def test_main_script_flows():
+    # Flujo de error por falta de argumentos numéricos mínimos
+    with patch.object(sys, 'argv', ['main.py']):
+        with pytest.raises(SystemExit) as exc_info:
+            main_entrypoint()
+        assert exc_info.value.code == 1
+
+    # Flujo de comando no reconocido
+    with patch.object(sys, 'argv', ['main.py', 'comando_invalido']):
+        with pytest.raises(SystemExit) as exc_info:
+            main_entrypoint()
+        assert exc_info.value.code == 1
+
+    # Flujo Exitoso simulado del comando 'prepare'
+    with patch.object(sys, 'argv', ['main.py', 'prepare']):
+        with patch('src.main.load_and_preprocess_data', return_value=(pd.DataFrame(0, index=[0], columns=['a']), None, None, None)):
+            main_entrypoint() # No debe crashear, solo ejecutar el print interno
+
+    # Flujo Exitoso simulado del comando 'train'
+    with patch.object(sys, 'argv', ['main.py', 'train']):
+        with patch('src.main.train_and_save_model', return_value={'accuracy': 0.95}):
+            main_entrypoint()

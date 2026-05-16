@@ -10,14 +10,11 @@ from pydantic import BaseModel, ConfigDict
 # CONFIGURACIÓN DE ENTORNO Y RUTAS
 # ==========================================
 
-# Ruta raíz del proyecto (robusto dentro y fuera de Docker)
 raiz_proyecto = os.environ.get("PROJECT_ROOT", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Cargar configuración global
 with open(os.path.join(raiz_proyecto, 'config', 'params.yaml'), 'r') as f:
     config = yaml.safe_load(f)
 
-# Variable global del modelo
 model = None
 
 # ==========================================
@@ -28,21 +25,23 @@ model = None
 async def lifespan(app: FastAPI):
     global model
     with open(os.path.join(raiz_proyecto, 'config', 'params.yaml'), 'r') as f:
-        config = yaml.safe_load(f)
+        config_l = yaml.safe_load(f)
 
-    ruta_modelo = os.path.join(raiz_proyecto, config['paths']['model_path'].replace('/', os.sep))
-    model = joblib.load(ruta_modelo)
+    ruta_m = os.path.join(raiz_proyecto, config_l['paths']['model_path'].replace('/', os.sep))
+    if os.path.exists(ruta_m):
+        model = joblib.load(ruta_m)
     yield
     model = None
 
-# Instanciar la aplicación FastAPI
 app = FastAPI(title="Churn Prediction API - UDG", lifespan=lifespan)
 
-# Carga inicial preventiva del modelo para scripts/tests que acceden directo al módulo
+# Carga inicial preventiva del modelo
 ruta_modelo = os.path.join(raiz_proyecto, config['paths']['model_path'].replace('/', os.sep))
 try:
-    model_data = joblib.load(ruta_modelo)
-    model = model_data
+    if os.path.exists(ruta_modelo):
+        model = joblib.load(ruta_modelo)
+    else:
+        model = None
 except Exception as e:
     print(f"Error crítico al cargar el modelo de respaldo: {e}")
     model = None
@@ -72,7 +71,6 @@ class ChurnInput(BaseModel):
     MonthlyCharges: float
     TotalCharges: float
     
-    # Sintaxis oficial moderna para Pydantic v2
     model_config = ConfigDict(populate_by_name=True)
 
 # ==========================================
@@ -81,20 +79,15 @@ class ChurnInput(BaseModel):
 
 @app.post("/predict")
 async def predict(payload: ChurnInput):
+    if model is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="El modelo predictivo no se encuentra cargado en el servidor."
+        )
     try:
-
-        # 1. Convertir la entrada en DataFrame
-        df_input = pd.DataFrame([payload.model_dump(by_alias=True)])
-
-        # 2. Alinear columnas según entrenamiento (opcional si tienes feature_names_in_)
-        if hasattr(model, "feature_names_in_"):
-            columnas_entrenamiento = model.feature_names_in_
-            df_final = pd.DataFrame(0, index=[0], columns=columnas_entrenamiento)
-
         # 1. Crear DataFrame inicial con los datos crudos del usuario
         df_input = pd.DataFrame([payload.model_dump(by_alias=True)])
         
-        # Mapeo explícito para variables de texto binarias que no son dummies
         mapeo_binario = {
             "Male": 1, "Female": 0,
             "Yes": 1, "No": 0
@@ -105,25 +98,17 @@ async def predict(payload: ChurnInput):
             columnas_entrenamiento = model.feature_names_in_
             df_final = pd.DataFrame(0, index=[0], columns=columnas_entrenamiento)
             
-            # Recorremos el payload para mapear tanto numéricas como categóricas
-
             for col in df_input.columns:
                 valor = df_input.iloc[0][col]
-                
-                # Caso A: Es una variable que coincide directamente en nombre (como 'gender' o numéricas)
                 if col in df_final.columns:
-                    # Si el valor es un string ("Male", "Yes"), lo transformamos usando el mapa
                     if isinstance(valor, str) and valor in mapeo_binario:
                         df_final[col] = mapeo_binario[valor]
                     else:
                         df_final[col] = valor
-                
-                # Caso B: Es una variable categórica pura que se convirtió en Dummy ("Columna_Valor")
                 else:
                     nombre_dummy = f"{col}_{valor}"
                     if nombre_dummy in df_final.columns:
                         df_final[nombre_dummy] = 1
-                        
         else:
             df_final = df_input
 

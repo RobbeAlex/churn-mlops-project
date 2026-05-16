@@ -1,0 +1,31 @@
+codecov:
+  bot: github-bot
+
+# Configuración de los comentarios automáticos en los Pull Requests
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default
+  require_changes: false  # Publica el reporte de diferencias aunque no varíe el porcentaje
+
+# Gestión de los objetivos de cobertura (SLA de calidad)
+coverage:
+  status:
+    # 1. Estado global del proyecto completo
+    project:
+      default:
+        target: 80%       # Tu meta final de calidad de software
+        threshold: 2%     # Margen de tolerancia: no falla el CI si baja a 78% temporalmente
+        base: auto
+    
+    # 2. Estado exclusivo para el código nuevo introducido en el PR (Líneas modificadas)
+    patch:
+      default:
+        target: 80%       # Exige que el código nuevo que subas venga bien cubierto
+        threshold: 0%     # No se permite código nuevo sin pruebas
+
+# Exclusiones de archivos para la métrica de cobertura de Codecov
+ignore:
+  - "tests/**/*"          # Excluye la suite de pruebas unitarias/integración
+  - "**/__init__.py"      # Excluye los archivos vacíos de inicialización de módulos
+  - "notebooks/**/*"      # Excluye los Jupyter Notebooks de experimentación del modelo
+  - "setup.py"            # Excluye configuraciones de distribución de Python
