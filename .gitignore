@@ -14,3 +14,8 @@ models/*.pkl
 # Configuración de IDE
 .idea/
 .vscode/
+
+# MLflow locales y temporales
+mlflow.db
+mlruns/
+outputs/
