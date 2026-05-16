@@ -19,3 +19,4 @@ models/*.pkl
 mlflow.db
 mlruns/
 outputs/
+EOF
