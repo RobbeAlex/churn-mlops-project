@@ -42,44 +42,29 @@ except Exception as e:
 
 # Definimos el esquema mapeando los nombres reales con espacios mediante alias
 class ChurnInput(BaseModel):
-    gender: int
+    gender: str
     SeniorCitizen: int
     Partner: int
+    Dependents: int
     tenure: int
+    PhoneService: int
+    MultipleLines: str
+    InternetService: str
+    OnlineSecurity: str
+    OnlineBackup: str
+    DeviceProtection: str
+    TechSupport: str
+    StreamingTV: str
+    StreamingMovies: str
+    Contract: str
+    PaperlessBilling: int
+    PaymentMethod: str
     MonthlyCharges: float
     TotalCharges: float
-    Dependents_Yes: int
-    PhoneService_Yes: int
-    MultipleLines_No_phone_service: int = Field(alias="MultipleLines_No phone service")
-    MultipleLines_Yes: int
-    InternetService_Fiber_optic: int = Field(alias="InternetService_Fiber optic")
-    InternetService_No: int
-    OnlineSecurity_No_internet_service: int = Field(alias="OnlineSecurity_No internet service")
-    OnlineSecurity_Yes: int
-    OnlineBackup_No_internet_service: int = Field(alias="OnlineBackup_No internet service")
-    OnlineBackup_Yes: int
-    DeviceProtection_No_internet_service: int = Field(alias="DeviceProtection_No internet service")
-    DeviceProtection_Yes: int
-    TechSupport_No_internet_service: int = Field(alias="TechSupport_No internet service")
-    TechSupport_Yes: int
-    StreamingTV_No_internet_service: int = Field(alias="StreamingTV_No internet service")
-    StreamingTV_Yes: int
-    StreamingMovies_No_internet_service: int = Field(alias="StreamingMovies_No internet service")
-    StreamingMovies_Yes: int
-    Contract_One_year: int = Field(alias="Contract_One year")
-    Contract_Two_year: int = Field(alias="Contract_Two year")
-    PaperlessBilling_Yes: int
-    PaymentMethod_Credit_card_automatic: int = Field(alias="PaymentMethod_Credit card (automatic)")
-    PaymentMethod_Electronic_check: int = Field(alias="PaymentMethod_Electronic check")
-    PaymentMethod_Mailed_check: int = Field(alias="PaymentMethod_Mailed check")
 
-    model_config = {"populate_by_name": True}
-
-    gender: int
-    Partner: int
-    InternetService_Fiber_optic: int = Field(0, alias="InternetService_Fiber optic")
-    PaymentMethod_Electronic_check: int = Field(0, alias="PaymentMethod_Electronic check")
-
+    df_input = pd.DataFrame([input_data.dict()])
+    # Haz aquí los get_dummies y alineaciones usando las columnas de entrenamiento
+    
     # Sintaxis oficial moderna para Pydantic v2
     model_config = ConfigDict(populate_by_name=True)
 
