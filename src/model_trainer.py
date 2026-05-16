@@ -1,6 +1,8 @@
 import os
 import joblib
 import pandas as pd
+import mlflow
+import mlflow.sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -63,55 +65,83 @@ def train_and_save_model(X_train, y_train, X_test, y_test, config):
     model_name = config['model']['name']
     random_state = config['data_split']['random_state']
 
-    if model_name == 'RandomForest':
-        model = RandomForestClassifier(
-            n_estimators=config['model'].get('n_estimators', 100),
-            max_depth=config['model'].get('max_depth', None),
-            random_state=random_state
-        )
-    elif model_name == 'LogisticRegression':
-        # Buscamos 'max_iter' en la configuración; si no se define, usamos 2000 por defecto
-        max_iter_config = config['model'].get('max_iter', 2000)
-        model = LogisticRegression(random_state=random_state, max_iter=max_iter_config)
-    else:
-        raise ValueError(f"El modelo '{model_name}' no está soportado.")
+    # Configurar el nombre del experimento en MLflow
+    mlflow.set_experiment("Prediccion_Churn_Telco")
 
-    model.fit(X_train, y_train)
-    print("Columnas esperadas por el modelo:")
-    print(list(model.feature_names_in_))  # ← aquí
-    y_pred = model.predict(X_test)
+    # Iniciar el rastreo del experimento
+    with mlflow.start_run():
+        
+        # Registrar parámetros globales
+        mlflow.log_param("model_name", model_name)
+        mlflow.log_param("random_state", random_state)
 
-    metrics = {
-        'accuracy': accuracy_score(y_test, y_pred),
-        'recall': recall_score(y_test, y_pred),
-        'f1_score': f1_score(y_test, y_pred)
-    }
+        if model_name == 'RandomForest':
+            n_estimators = config['model'].get('n_estimators', 100)
+            max_depth = config['model'].get('max_depth', None)
+            
+            # Registrar hiperparámetros específicos
+            mlflow.log_param("n_estimators", n_estimators)
+            mlflow.log_param("max_depth", max_depth)
 
-    # Guardado blindado en la raíz del proyecto
-    ruta_script = os.path.abspath(__file__)
-    raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
-    ruta_relativa_modelo = config['paths']['model_path'].replace('/', os.sep)
-    save_path = os.path.join(raiz_proyecto, ruta_relativa_modelo)
+            model = RandomForestClassifier(
+                n_estimators=n_estimators,
+                max_depth=max_depth,
+                random_state=random_state
+            )
+        elif model_name == 'LogisticRegression':
+            max_iter_config = config['model'].get('max_iter', 2000)
+            
+            # Registrar hiperparámetros específicos
+            mlflow.log_param("max_iter", max_iter_config)
+            
+            model = LogisticRegression(random_state=random_state, max_iter=max_iter_config)
+        else:
+            raise ValueError(f"El modelo '{model_name}' no está soportado.")
 
-    # === SISTEMA DE RUTAS SEGURO Y BLINDADO ===
-    config_path = config['paths']['model_path']
+        # Entrenamiento
+        model.fit(X_train, y_train)
+        print("Columnas esperadas por el modelo:")
+        print(list(model.feature_names_in_))
+        
+        # Predicción y Métricas
+        y_pred = model.predict(X_test)
+        metrics = {
+            'accuracy': accuracy_score(y_test, y_pred),
+            'recall': recall_score(y_test, y_pred),
+            'f1_score': f1_score(y_test, y_pred)
+        }
 
-    if os.path.isabs(config_path):
-        save_path = config_path
-    else:
-        if config_path.startswith('/app/'):
-            config_path = config_path.replace('/app/', '', 1)
-        elif config_path.startswith('/'):
-            config_path = config_path.lstrip('/')
+        # Registrar las métricas en MLflow
+        mlflow.log_metrics(metrics)
 
+        # Registrar el modelo entrenado como un artefacto en MLflow
+        mlflow.sklearn.log_model(model, "modelo_churn")
+
+        # ==========================================
+        # GUARDADO TRADICIONAL (Manteniendo tu lógica)
+        # ==========================================
         ruta_script = os.path.abspath(__file__)
         raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
-        save_path = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
+        ruta_relativa_modelo = config['paths']['model_path'].replace('/', os.sep)
+        save_path = os.path.join(raiz_proyecto, ruta_relativa_modelo)
 
-    # IMPRIMIR LA RUTA REAL EN LA CONSOLA DE PYTEST
-    print(f"\n[DEBUG TRAIN] El modelo se intentará guardar en: {save_path}")
+        config_path = config['paths']['model_path']
 
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    joblib.dump(model, save_path)
+        if os.path.isabs(config_path):
+            save_path = config_path
+        else:
+            if config_path.startswith('/app/'):
+                config_path = config_path.replace('/app/', '', 1)
+            elif config_path.startswith('/'):
+                config_path = config_path.lstrip('/')
+
+            ruta_script = os.path.abspath(__file__)
+            raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
+            save_path = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
+
+        print(f"\n[DEBUG TRAIN] El modelo se intentará guardar en: {save_path}")
+
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        joblib.dump(model, save_path)
 
     return metrics
