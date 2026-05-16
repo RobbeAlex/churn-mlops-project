@@ -1,30 +1,26 @@
 stages:
   prepare:
-    cmd: python src/prepare.py
+    cmd: python src/data_loader.py
     deps:
-      - src/prepare.py
-      - data/raw/churn_data.csv
+      - src/data_loader.py
+      - data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv
     params:
-      - prepare.test_size
-      - prepare.random_state
-    outs:
+      # Se especifica la ruta del archivo antes de los nombres de los parámetros
+      - config/params.yaml:
+        - test_size
+        - random_state
+     outs:
       - data/processed/train.csv
       - data/processed/test.csv
 
   train:
-    cmd: python src/train.py
+    cmd: python src/model_trainer.py
     deps:
-      - src/train.py
-      - data/processed/train.csv
+      - src/model_trainer.py
+      - data/processed/model_trainer.csv
     params:
-      - train.estimator
-      - train.hyperparameters
+      - config/params.yaml:
+        - train.estimator
+        - train.hyperparameters
     outs:
-      - models/model.pkl
-
-  evaluate:
-    cmd: python src/evaluate.py
-    deps:
-      - src/evaluate.py
-      - data/processed/test.csv
       - models/model.pkl
