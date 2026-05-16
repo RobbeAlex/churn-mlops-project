@@ -1,6 +1,11 @@
 gender,SeniorCitizen,Partner,tenure,MonthlyCharges,TotalCharges,Dependents_Yes,PhoneService_Yes,MultipleLines_No phone service,MultipleLines_Yes,InternetService_Fiber optic,InternetService_No,OnlineSecurity_No internet service,OnlineSecurity_Yes,OnlineBackup_No internet service,OnlineBackup_Yes,DeviceProtection_No internet service,DeviceProtection_Yes,TechSupport_No internet service,TechSupport_Yes,StreamingTV_No internet service,StreamingTV_Yes,StreamingMovies_No internet service,StreamingMovies_Yes,Contract_One year,Contract_Two year,PaperlessBilling_Yes,PaymentMethod_Credit card (automatic),PaymentMethod_Electronic check,PaymentMethod_Mailed check,Churn
-0,0,1,72,114.05,8468.2,True,True,False,True,True,False,False,True,False,True,False,True,False,True,False,True,False,True,False,True,True,True,False,False,0
+1,0,0,22,89.25,1907.85,False,True,False,False,True,False,False,False,False,False,False,False,False,False,False,True,False,True,False,False,False,False,True,False,1
 1,1,0,8,100.15,908.55,False,True,False,True,True,False,False,False,False,False,False,False,False,True,False,True,False,True,False,False,True,True,False,False,0
+0,1,0,17,45.05,770.6,False,True,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,True,False,1
+0,0,1,72,114.05,8468.2,True,True,False,True,True,False,False,True,False,True,False,True,False,True,False,True,False,True,False,True,True,True,False,False,0
+0,1,0,2,74.85,156.4,False,True,False,True,True,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,True,False,False,True,1
 1,0,1,41,78.35,3211.2,True,True,False,True,False,False,False,True,False,True,False,True,False,False,False,True,False,False,True,False,True,True,False,False,0
-0,0,1,18,78.2,1468.75,False,True,False,False,True,False,False,False,False,False,False,True,False,True,False,False,False,False,False,False,False,False,True,False,0
+0,0,1,13,102.25,1359.0,False,True,False,True,True,False,False,False,False,False,False,True,False,False,False,True,False,True,False,False,True,True,False,False,1
 1,0,1,72,82.65,5919.35,False,True,False,True,False,False,False,True,False,True,False,True,False,False,False,True,False,True,False,True,True,True,False,False,0
+0,0,1,18,78.2,1468.75,False,True,False,False,True,False,False,False,False,False,False,True,False,True,False,False,False,False,False,False,False,False,True,False,0
+1,1,0,11,84.8,906.85,False,True,False,True,True,False,False,False,False,False,False,False,False,False,False,False,False,True,False,False,True,True,False,False,1
