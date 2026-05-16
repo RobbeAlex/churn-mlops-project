@@ -67,14 +67,25 @@ def test_load_and_preprocess_data_integrity(config):
 
 def test_train_and_save_model_logic(config):
     X_train, X_test, y_train, y_test = load_and_preprocess_data(config)
-    train_df = pd.concat([X_train.head(10), y_train.head(10)], axis=1)
-    test_df = pd.concat([X_test.head(5), y_test.head(5)], axis=1)
+
+    # REPARACIÓN AQUÍ: Filtramos para garantizar que entren ejemplos de ambas clases (0 y 1)
+    df_train_full = pd.concat([X_train, y_train], axis=1)
+    df_test_full = pd.concat([X_test, y_test], axis=1)
+    
+    # Tomamos muestras balanceadas para el entorno de pruebas rápido
+    train_class_0 = df_train_full[df_train_full['Churn'] == 0].head(10)
+    train_class_1 = df_train_full[df_train_full['Churn'] == 1].head(10)
+    train_df = pd.concat([train_class_0, train_class_1], axis=0).sample(frac=1, random_state=42)
+    
+    test_class_0 = df_test_full[df_test_full['Churn'] == 0].head(5)
+    test_class_1 = df_test_full[df_test_full['Churn'] == 1].head(5)
+    test_df = pd.concat([test_class_0, test_class_1], axis=0).sample(frac=1, random_state=42)
 
     real_processed_dir = os.path.join(raiz_proyecto, 'data', 'processed')
     os.makedirs(real_processed_dir, exist_ok=True)
     
-    pd.DataFrame(train_df).to_csv(os.path.join(real_processed_dir, 'train.csv'), index=False)
-    pd.DataFrame(test_df).to_csv(os.path.join(real_processed_dir, 'test.csv'), index=False)
+    train_df.to_csv(os.path.join(real_processed_dir, 'train.csv'), index=False)
+    test_df.to_csv(os.path.join(real_processed_dir, 'test.csv'), index=False)
 
     # Cobertura de caminos lógicos en model_trainer (Logistic Regression)
     config['model']['name'] = 'LogisticRegression'
@@ -100,8 +111,7 @@ def test_train_and_save_model_logic(config):
         r = os.path.join(raiz_proyecto, "models", p)
         if os.path.exists(r):
             os.remove(r)
-
-
+            
 def test_train_and_save_model_file_not_found(config):
     # Forzar error de archivo no encontrado borrando temporalmente rutas conocidas
     with patch('os.path.exists', return_value=False):
