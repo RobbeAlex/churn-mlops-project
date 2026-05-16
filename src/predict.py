@@ -1,19 +1,12 @@
+import os
+import sys
 import joblib
 import pandas as pd
 import yaml
-import sys
-import os
 
-# 1. Ruta robusta a la raíz del proyecto
 ruta_script = os.path.abspath(__file__)
 directorio_src = os.path.dirname(ruta_script)
 raiz_proyecto = os.path.dirname(directorio_src)
-
-if raiz_proyecto not in sys.path:
-    sys.path.append(raiz_proyecto)
-
-# 2. Importar función de procesamiento de datos
-from src.data_loader import load_and_preprocess_data
 
 def load_config():
     ruta_config = os.path.join(raiz_proyecto, 'config', 'params.yaml')
@@ -25,75 +18,57 @@ def load_config():
         sys.exit(1)
 
 def predict_new_customer(customer_data_dict):
-    """
-    Recibe un diccionario con las llaves crudas (tipo API), procesa las features,
-    alinea las columnas y devuelve la predicción.
-    """
     config = load_config()
 
-    # Obtener estructura de columnas de entrenamiento real
-    X_train, _, _, _ = load_and_preprocess_data(config)
-    all_columns = X_train.columns
-
-    # Convertir el dict de cliente a DataFrame de una fila
-    cliente_df = pd.DataFrame([customer_data_dict])
-
-    # Unir para asegurar el correcto procesado como en entrenamiento
-    df_unido = pd.concat([X_train, cliente_df], ignore_index=True)
-    df_unido = pd.get_dummies(df_unido)
-
-    # Tomar SOLO la última fila (cliente nuevo)
-    cliente_procesado = df_unido.tail(1)
-
-    # Asegurarse de que las columnas estén en el mismo orden y presencia que el entrenamiento
-    cliente_procesado = cliente_procesado.reindex(columns=all_columns, fill_value=0)
-
-    # Cargar modelo
+    # Cargar el modelo entrenado
     config_path = config['paths']['model_path']
     if config_path.startswith('/app/'):
         config_path = config_path.replace('/app/', '', 1)
     elif config_path.startswith('/'):
         config_path = config_path.lstrip('/')
     ruta_modelo = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
+    
     if not os.path.exists(ruta_modelo):
         print(f"Error crítico: No se encontró un modelo entrenado en '{ruta_modelo}'.")
-        print("Por favor, ejecuta 'python -m src.main' primero para entrenarlo.")
         sys.exit(1)
 
     model = joblib.load(ruta_modelo)
+
+    # Convertir datos crudos del usuario a DataFrame
+    cliente_df = pd.DataFrame([customer_data_dict])
+
+    # Aplicar exactamente el mismo mapeo binario manual que en el entrenamiento
+    cliente_df['gender'] = cliente_df['gender'].map({'Female': 1, 'Male': 0})
+    cliente_df['Partner'] = cliente_df['Partner'].map({'Yes': 1, 'No': 0})
+    if 'Churn' in cliente_df.columns:
+        cliente_df = cliente_df.drop(columns=['Churn'])
+
+    # Aplicar One-Hot Encoding para las variables de texto restantes
+    cliente_procesado = pd.get_dummies(cliente_df)
+
+    # ALINEACIÓN ULTRA-EFICIENTE usando la metadata nativa del modelo entrenado
+    if hasattr(model, "feature_names_in_"):
+        all_columns = model.feature_names_in_
+        cliente_procesado = cliente_procesado.reindex(columns=all_columns, fill_value=0)
+    else:
+        print("Advertencia: El modelo no contiene el atributo 'feature_names_in_'.")
 
     pred = model.predict(cliente_procesado)[0]
     prob = model.predict_proba(cliente_procesado)[0][1]
 
     return {
         "prediction": int(pred),
-        "label": "Churn (Sí abandona)" if pred == 1 else "No Churn (Se queda)",
+        "label": "Churn" if pred == 1 else "No Churn",
         "probability": round(float(prob), 2)
     }
 
 if __name__ == "__main__":
-    # Ejemplo de uso
     ejemplo_cliente = {
-        "gender": "Male",
-        "SeniorCitizen": 0,
-        "Partner": 1,
-        "Dependents": 0,
-        "tenure": 5,
-        "PhoneService": 1,
-        "MultipleLines": "No",
-        "InternetService": "DSL",
-        "OnlineSecurity": "No",
-        "OnlineBackup": "Yes",
-        "DeviceProtection": "No",
-        "TechSupport": "No",
-        "StreamingTV": "No",
-        "StreamingMovies": "No",
-        "Contract": "Month-to-month",
-        "PaperlessBilling": 1,
-        "PaymentMethod": "Electronic check",
-        "MonthlyCharges": 80.0,
-        "TotalCharges": 400.0
+        "gender": "Male", "SeniorCitizen": 0, "Partner": 1, "Dependents": 0,
+        "tenure": 5, "PhoneService": 1, "MultipleLines": "No", "InternetService": "DSL",
+        "OnlineSecurity": "No", "OnlineBackup": "Yes", "DeviceProtection": "No",
+        "TechSupport": "No", "StreamingTV": "No", "StreamingMovies": "No",
+        "Contract": "Month-to-month", "PaperlessBilling": 1, "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 80.0, "TotalCharges": 400.0
     }
-
-    resultado = predict_new_customer(ejemplo_cliente)
-    print("Resultado de la predicción:", resultado)
+    print("Resultado de la predicción de prueba:", predict_new_customer(ejemplo_cliente))
