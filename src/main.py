@@ -1,54 +1,50 @@
-import yaml
 import sys
 import os
 import random
+import yaml
 import numpy as np
-from src.model_trainer import load_and_preprocess_data, train_and_save_model
+from src.data_loader import load_and_preprocess_data
+from src.model_trainer import train_and_save_model
 
 
 def main():
-    # 1. Obtener la ruta absoluta del archivo main.py actual
+    if len(sys.argv) < 2:
+        print("Uso: python -m src.main [prepare|train]")
+        sys.exit(1)
+        
+    action = sys.argv[1]
+
     ruta_script = os.path.abspath(__file__)
-
-    # 2. Obtener el directorio donde está el script (carpeta 'src')
     directorio_src = os.path.dirname(ruta_script)
-
-    # 3. Subir un nivel para llegar a la raíz del proyecto ('project-root-main')
     raiz_proyecto = os.path.dirname(directorio_src)
-
-    # 4. Construir la ruta final hacia el archivo yaml
     ruta_config = os.path.join(raiz_proyecto, 'config', 'params.yaml')
 
     try:
-        # Usar la nueva ruta dinámica en lugar del string estático
-        with open('config/params.yaml', 'r') as f:
+        with open(ruta_config, 'r') as f:
             config = yaml.safe_load(f)
     except FileNotFoundError:
         print(f"Error: No se encontró el archivo en la ruta: {ruta_config}")
         sys.exit(1)
 
     semilla_global = config['data_split']['random_state']
-
-    # Fijar el azar de los generadores base de Python y NumPy
-    semilla_global = config['data_split']['random_state']
     random.seed(semilla_global)
     np.random.seed(semilla_global)
 
-    print("Iniciando pipeline de Machine Learning...")
-
-    # -> Cargando y preprocesando datos...
-    print("-> Cargando y preprocesando datos...")
-    X_train, X_test, y_train, y_test = load_and_preprocess_data(config)
-    print(f"   Datos procesados: {X_train.shape[0]} muestras de entrenamiento.")
-
-    # -> Entrenando y guardando el modelo...
-    print(f"-> Entrenando modelo seleccionado: {config['model']['name']}...")
-    metrics = train_and_save_model(X_train, y_train, X_test, y_test, config)
-
-    # -> Mostrar resultados
-    print("\n¡Entrenamiento completado exitosamente! Métricas de validación:")
-    for metric_name, value in metrics.items():
-        print(f" - {metric_name.capitalize()}: {value:.4f}")
+    if action == "prepare":
+        print("Iniciando etapa: [PREPARE] - Cargando y preprocesando datos...")
+        X_train, _, _, _ = load_and_preprocess_data(config)
+        print(f"✔ Datos preparados: {X_train.shape[0]} muestras de entrenamiento generadas.")
+        
+    elif action == "train":
+        print(f"Iniciando etapa: [TRAIN] - Entrenando modelo seleccionado: {config['model']['name']}...")
+        metrics = train_and_save_model(config)
+        print("\n¡Entrenamiento completado exitosamente! Métricas de validación:")
+        for metric_name, value in metrics.items():
+            print(f" - {metric_name.capitalize()}: {value:.4f}")
+            
+    else:
+        print(f"Acción '{action}' no reconocida. Usa 'prepare' o 'train'.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
