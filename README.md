@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="docs/images/banner.png" alt="MLOps Churn Prediction Banner" width="100%">
-</p>
-
 # 📡 Proyecto MLOps: Predicción de Churn en Telecomunicaciones
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
