@@ -1,5 +1,11 @@
 # **Documentación del Dataset: Telco Customer Churn**
 
+## **0\. Obtención del dataset**
+
+**Nombre:** Telco Customer Churn  
+**Fuente:** [Kaggle — IBM Sample Data](https://www.kaggle.com/datasets/blastchar/telco-customer-churn)  
+**Archivo:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`
+
 ## **1\. Descripción del dataset**
 
 Este conjunto de datos contiene información detallada sobre los clientes de una operadora de telecomunicaciones, diseñada para el análisis de la tasa de cancelación (churn).
