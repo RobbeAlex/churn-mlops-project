@@ -68,27 +68,20 @@ class ChurnInput(BaseModel):
 @app.post("/predict")
 async def predict(payload: ChurnInput):
     try:
-        return {"prediction": int(pred), "probability": float(prob)}
-    except Exception as e:
-        print(f"Error en la predicción: {e}")
-        raise HTTPException(status_code=400, detail=f"Error en la predicción: {e}")
+        # 1. Convertir la entrada en DataFrame
+        df_input = pd.DataFrame([payload.model_dump(by_alias=True)])
 
-        # 2. Crear DataFrame respetando los nombres de los alias (las columnas con espacios)
-        df_input = pd.DataFrame([input_data.model_dump(by_alias=True)])
-
-        # 3. ALINEACIÓN: El modelo espera ~30 columnas por los dummies
+        # 2. Alinear columnas según entrenamiento (opcional si tienes feature_names_in_)
         if hasattr(model, "feature_names_in_"):
             columnas_entrenamiento = model.feature_names_in_
             df_final = pd.DataFrame(0, index=[0], columns=columnas_entrenamiento)
-            
-            # Llenamos solo las que el usuario envió
             for col in df_input.columns:
                 if col in df_final.columns:
                     df_final[col] = df_input[col]
         else:
-            # Si no tenemos feature_names_in_, pasamos el DF tal cual
             df_final = df_input
 
+        # 3. Realizar la predicción
         pred = model.predict(df_final)[0]
         prob = model.predict_proba(df_final)[0][1]
 
