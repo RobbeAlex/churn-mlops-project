@@ -45,4 +45,4 @@ jobs:
     - name: Test with pytest
       run: |
           rm -f mlflow.db
-          ./.venv/bin/pytest -s
+          python -m pytest -s
