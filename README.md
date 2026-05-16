@@ -5,7 +5,7 @@
 ![scikit--learn](https://img.shields.io/badge/scikit--learn-1.4.2-orange)
 ![Docker](https://img.shields.io/badge/Docker-ready-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-[![Python application](https://github.com/RobbeAlex/churn-mlops-project/actions/workflows/python-app.yml/badge.svg)](https://github.com/RobbeAlex/churn-mlops-project/actions/workflows/python-app.yml)
+[![Python application](https://github.com/RobbeAlex/churn-mlops-project/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/RobbeAlex/churn-mlops-project/actions/workflows/python-app.yml)
 
 Pipeline de Machine Learning modular y reproducible para predecir si un cliente de telecomunicaciones abandonará el servicio (**Churn**). El proyecto simula un entorno laboral real donde **4 roles colaboran** bajo buenas prácticas de MLOps, desde la ingesta de datos hasta el despliegue de una API REST lista para producción.
 
