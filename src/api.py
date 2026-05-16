@@ -61,10 +61,7 @@ class ChurnInput(BaseModel):
     PaymentMethod: str
     MonthlyCharges: float
     TotalCharges: float
-
-   def your_function(input_data):
-       df_input = pd.DataFrame([input_data.dict()])
-    
+   
     # Sintaxis oficial moderna para Pydantic v2
     model_config = ConfigDict(populate_by_name=True)
 
