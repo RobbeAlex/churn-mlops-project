@@ -111,7 +111,7 @@ pip install -r requirements.txt
 ### 1. **Clonar el repositorio**:
 
 ```bash
-   `git clone <url-de-tu-repo>`
+   `git clone https://github.com/RobbeAlex/churn-mlops-project`
 ```
 
 Carga los datos, entrena el modelo configurado en `config/params.yaml` y guarda el `.pkl` en `models/`.

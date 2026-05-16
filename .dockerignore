@@ -4,4 +4,4 @@ __pycache__
 .git
 .gitignore
 #.dockerignore  <-- Opcional
-#data/raw/*.csv
+data/raw/*.csv

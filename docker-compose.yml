@@ -17,6 +17,7 @@ services:
     volumes:
       - ./models:/app/models
       - ./data:/app/data
+    command: uvicorn src.api:app --host 0.0.0.0 --port 8000
     depends_on:
       train:
         condition: service_completed_successfully

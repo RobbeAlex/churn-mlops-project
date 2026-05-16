@@ -2,38 +2,64 @@ import os
 import joblib
 import pandas as pd
 import yaml
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-# Configuración de rutas dinámicas para Zapopan/Windows
-ruta_script = os.path.abspath(__file__)
-raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
+# Ruta raíz del proyecto (robusto dentro y fuera de Docker)
+raiz_proyecto = os.environ.get("PROJECT_ROOT", os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-app = FastAPI(title="Churn Prediction API - UDG")
+# Variable global del modelo
+model = None
 
-# 1. Cargar configuración y modelo
-with open(os.path.join(raiz_proyecto, 'config', 'params.yaml'), 'r') as f:
-    config = yaml.safe_load(f)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global model
+    with open(os.path.join(raiz_proyecto, 'config', 'params.yaml'), 'r') as f:
+        config = yaml.safe_load(f)
 
-ruta_modelo = os.path.join(raiz_proyecto, config['paths']['model_path'].replace('/', os.sep))
-
-# Cargamos el modelo y extraemos las columnas que espera
-try:
-    model_data = joblib.load(ruta_modelo)
-    # Si guardaste el modelo directamente, lo asignamos.
-    # Si guardaste un dict con columnas, lo extraemos.
-    model = model_data
-except Exception as e:
-    print(f"Error crítico al cargar el modelo: {e}")
+    ruta_modelo = os.path.join(raiz_proyecto, config['paths']['model_path'].replace('/', os.sep))
+    model = joblib.load(ruta_modelo)
+    yield
     model = None
 
 
+app = FastAPI(title="Churn Prediction API - UDG", lifespan=lifespan)
+
+
 class ChurnInput(BaseModel):
+    gender: int
+    SeniorCitizen: int
+    Partner: int
     tenure: int
     MonthlyCharges: float
     TotalCharges: float
-    gender: int
-    Partner: int
+    Dependents_Yes: int
+    PhoneService_Yes: int
+    MultipleLines_No_phone_service: int = Field(alias="MultipleLines_No phone service")
+    MultipleLines_Yes: int
+    InternetService_Fiber_optic: int = Field(alias="InternetService_Fiber optic")
+    InternetService_No: int
+    OnlineSecurity_No_internet_service: int = Field(alias="OnlineSecurity_No internet service")
+    OnlineSecurity_Yes: int
+    OnlineBackup_No_internet_service: int = Field(alias="OnlineBackup_No internet service")
+    OnlineBackup_Yes: int
+    DeviceProtection_No_internet_service: int = Field(alias="DeviceProtection_No internet service")
+    DeviceProtection_Yes: int
+    TechSupport_No_internet_service: int = Field(alias="TechSupport_No internet service")
+    TechSupport_Yes: int
+    StreamingTV_No_internet_service: int = Field(alias="StreamingTV_No internet service")
+    StreamingTV_Yes: int
+    StreamingMovies_No_internet_service: int = Field(alias="StreamingMovies_No internet service")
+    StreamingMovies_Yes: int
+    Contract_One_year: int = Field(alias="Contract_One year")
+    Contract_Two_year: int = Field(alias="Contract_Two year")
+    PaperlessBilling_Yes: int
+    PaymentMethod_Credit_card_automatic: int = Field(alias="PaymentMethod_Credit card (automatic)")
+    PaymentMethod_Electronic_check: int = Field(alias="PaymentMethod_Electronic check")
+    PaymentMethod_Mailed_check: int = Field(alias="PaymentMethod_Mailed check")
+
+    model_config = {"populate_by_name": True}
 
 
 @app.post("/predict")
@@ -42,25 +68,17 @@ async def predict(input_data: ChurnInput):
         raise HTTPException(status_code=500, detail="El modelo no está cargado.")
 
     try:
-        # 2. Crear DataFrame con la entrada
-        df_input = pd.DataFrame([input_data.dict()])
+        df_input = pd.DataFrame([input_data.dict(by_alias=True)])
 
-        # 3. ALINEACIÓN: El modelo espera ~30 columnas por los dummies
-        # Recuperamos las columnas del entrenamiento.
-        # Si el modelo es de scikit-learn, podemos obtenerlas de sus atributos si se guardaron
         if hasattr(model, "feature_names_in_"):
             columnas_entrenamiento = model.feature_names_in_
-            # Creamos un DataFrame con ceros para todas las columnas faltantes
             df_final = pd.DataFrame(0, index=[0], columns=columnas_entrenamiento)
-            # Llenamos solo las que el usuario envió
             for col in df_input.columns:
                 if col in df_final.columns:
                     df_final[col] = df_input[col]
         else:
-            # Si no tenemos feature_names_in_, pasamos el DF tal cual (esto podría dar error)
             df_final = df_input
 
-        # 4. Predicción
         pred = model.predict(df_final)[0]
         prob = model.predict_proba(df_final)[0][1]
 
@@ -71,5 +89,4 @@ async def predict(input_data: ChurnInput):
         }
 
     except Exception as e:
-        # Esto imprimirá el error real en tu terminal de PyCharm
         raise HTTPException(status_code=500, detail=str(e))
