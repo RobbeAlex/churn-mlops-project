@@ -7,88 +7,64 @@
 ![DVC](https://img.shields.io/badge/DVC-Data_Version_Control-purple)
 ![MLflow](https://img.shields.io/badge/MLflow-Experiment_Tracking-blue)
 ![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-[![Python application](https://github.com/RobbeAlex/churn-mlops-project/actions/workflows/python-app.yml/badge.svg?branch=main)](https://github.com/RobbeAlex/churn-mlops-project/actions/workflows/python-app.yml)
-[![codecov](https://codecov.io/gh/RobbeAlex/churn-mlops-project/graph/badge.svg?token=WFGYQV4VB3)](https://codecov.io/gh/RobbeAlex/churn-mlops-project)
-
-Pipeline de Machine Learning modular y reproducible para predecir el abandono de clientes (**Churn**) en telecomunicaciones. El proyecto simula un entorno colaborativo con **4 roles de ingeniería** aplicando buenas prácticas de MLOps: desde la ingesta de datos hasta el despliegue de una API REST. Incorpora **DVC** para el control de versiones de datos, **MLflow** para tracking de experimentos, y herramientas de CI/CD (**GitHub Actions, Codecov, pre-commit**) para asegurar la máxima calidad de código.
-
----
-
-## 📋 Tabla de Contenidos
-
-- [¿Qué hace este proyecto?](#-qué-hace-este-proyecto)
-- [Resultados del Modelo](#-resultados-del-modelo)
-- [Tecnologías Utilizadas](#️-tecnologías-utilizadas)
-- [Instalación](#-instalación)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Cómo Ejecutar](#-cómo-ejecutar)
-- [Uso de la API](#-uso-de-la-api)
-- [Roles y Responsabilidades](#-roles-y-responsabilidades)
-- [Flujo de Trabajo y Calidad de Código](#-flujo-de-trabajo-y-calidad-de-código)
-
----
 
 ## 🎯 ¿Qué hace este proyecto?
 
-Desarrolla un **sistema completo de predicción de abandono de clientes** que incluye:
+Este proyecto desarrolla un **sistema completo y colaborativo de predicción de abandono de clientes (Churn)** simulando un entorno laboral real. Implementa un pipeline de Machine Learning modular y reproducible que incluye:
 
-- **Preprocesamiento automático** (imputación, encoding, split train/test).
-- **Entrenamiento de modelos** (Random Forest / Regresión Logística).
-- **Tracking de Experimentos** usando MLflow (registro de métricas y parámetros).
-- **Control de Versiones de Datos (DVC)** para rastrear datasets y pipelines.
-- **Calidad de Código y Cobertura** continua (pre-commit, Codecov, GitHub Actions).
-- **API REST con FastAPI** lista para producción.
-- **Contenerización con Docker** para máxima reproducibilidad.
+- **Preprocesamiento automático** y entrenamiento de modelos.
+- **Control de Versiones de Datos (DVC)** y **Tracking de Experimentos (MLflow)**.
+- **Pruebas y Calidad de Código** en Integración Continua (CI) usando `pre-commit` y `pytest`.
+- **Despliegue de API REST** mediante FastAPI, empaquetada con Docker para producción.
 
 ---
 
 ## 🏆 Resultados del Modelo
 
-**Algoritmo seleccionado:** `RandomForestClassifier` (100 estimadores, max_depth=10)
+**Algoritmo seleccionado:** `RandomForestClassifier`
 
 | Métrica | Valor | Interpretación |
 |---------|-------|----------------|
-| **Accuracy** | 0.8155 | 81.55% de predicciones correctas globales. |
-| **Recall** | 0.5389 | Detecta el 53.89% de los clientes que realmente abandonan. |
-| **F1-Score** | 0.6073 | Balance adecuado entre precisión y exhaustividad. |
+| **Accuracy** | 0.8155 | 81.55% de las predicciones globales son correctas. |
+| **Recall** | 0.5389 | Identifica el 53.89% de los clientes que realmente abandonarán. |
 
-> **⚠️ Nota:** El desbalance de clases (74% No Churn / 26% Churn) afecta el Recall. Para aplicaciones críticas de negocio, se sugiere aplicar técnicas como SMOTE o ajustar `class_weight`.
-
----
-
-## 🛠️ Tecnologías Utilizadas
-
-- **Core & ML:** Python (3.9+), scikit-learn, pandas, numpy.
-- **MLOps:** MLflow (Experiment Tracking), DVC (Data Versioning).
-- **API & Despliegue:** FastAPI, Uvicorn, Docker, Docker Compose.
-- **Calidad y Testing:** pytest, pre-commit (Black, Ruff), Codecov, GitHub Actions.
+> **Nota:** El Recall de 0.54 se debe al desbalance de clases (74% No Churn / 26% Churn) presente en los datos originales.
 
 ---
 
-## 🚀 Instalación
+## 📊 ¿Qué dataset usa y para qué sirve?
 
-Asegúrate de contar con Python 3.9+, Git, y Docker (opcional). Puedes descargar el dataset manualmente en `data/raw/` (ver `DATASET.md` para más información).
+- **Dataset:** *Telco Customer Churn* (fuente original: Kaggle - IBM Sample Data).
+- **Propósito:** Predecir si un cliente cancelará su servicio de telecomunicaciones (`Churn = Yes / No`), lo que permite a la empresa tomar medidas preventivas y accionar estrategias proactivas de retención.
+- **Contenido:** 7,043 registros y 21 variables, abarcando información demográfica, servicios contratados y comportamiento financiero (ej. `tenure`, `MonthlyCharges`).
+- *Nota: Un análisis profundo de las variables y sus implicaciones éticas y sesgos se documenta extensamente en `DATASET.md` y `ETHICS.md`.*
 
-### Opción A: Entorno Local
+---
 
+## 🚀 ¿Cómo lo instalo?
+
+Para ejecutar este proyecto, es necesario instalar sus dependencias en un entorno aislado.
+
+### Opción A: Instalación Local con Entorno Virtual
 ```bash
-# 1. Clonar el repositorio y crear entorno virtual
+# 1. Clonar el repositorio
 git clone https://github.com/RobbeAlex/churn-mlops-project.git
 cd churn-mlops-project
+
+# 2. Crear el entorno virtual
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 2. Instalar dependencias y hooks de calidad de código
+# 3. Activar el entorno virtual
+source .venv/bin/activate  # En Windows usar: .venv\Scripts\activate
+
+# 4. Instalar todas las dependencias con sus versiones específicas
 pip install -r requirements.txt
-pre-commit install
 
-# 3. Descargar el dataset (si no usas DVC)
-python scripts/download_dataset.py
+# 5. Configurar los hooks de calidad de código (opcional pero recomendado)
+pre-commit install
 ```
 
-### Opción B: Docker (Recomendado)
-
+### Opción B: Instalación con Docker (Alternativa recomendada)
 ```bash
 git clone https://github.com/RobbeAlex/churn-mlops-project.git
 cd churn-mlops-project
@@ -97,82 +73,70 @@ docker-compose build
 
 ---
 
-## 📂 Estructura del Proyecto
+## 🏃 ¿Cómo lo ejecuto?
 
-```text
-churn-mlops-project/
-├── .github/workflows/          # Pipelines CI/CD en GitHub Actions
-├── config/                     # Configuraciones (params.yaml)
-├── data/                       # Datos raw y procesados (gestionados por DVC)
-├── docs/                       # Documentación adicional (DATASET.md, ETHICS.md)
-├── models/                     # Modelos serializados (.pkl)
-├── scripts/                    # Scripts auxiliares (descarga de dataset, etc)
-├── src/                        # Código fuente del pipeline y la API (FastAPI)
-├── test/                       # Tests unitarios con pytest
-├── dvc.yaml                    # Pipeline de Data Version Control
-├── codecov.yml                 # Configuración de cobertura
-├── .pre-commit-config.yaml     # Hooks de linting y formateo (Black, Ruff)
-├── docker-compose.yml          # Orquestación de contenedores
-└── requirements.txt            # Dependencias del proyecto
-```
+El proyecto permite reproducir el entrenamiento mediante DVC y levantar una API REST de inferencia.
 
----
-
-## 🏃 Cómo Ejecutar
-
-### 1. Ejecutar el Pipeline ML (DVC)
-Utilizamos DVC para orquestar la preparación de datos y el entrenamiento:
+### 1. Ejecutar el Entrenamiento (Pipeline de ML)
+Gracias a DVC, se puede reproducir el flujo completo (descarga de datos, preparación y entrenamiento) respetando estrictamente sus dependencias:
 ```bash
 dvc repro
 ```
+*(Para visualizar las métricas y parámetros, puedes levantar la interfaz de MLflow con el comando `mlflow ui`, disponible en http://127.0.0.1:5000).*
 
-### 2. Ver Métricas y Experimentos (MLflow)
-Inicia la interfaz de MLflow para revisar el historial de modelos:
+### 2. Levantar la API de Predicción
 ```bash
-mlflow ui  # Disponible en http://127.0.0.1:5000
+# De forma local usando Uvicorn:
+uvicorn src.api:app --reload
+
+# O usando contenedores con Docker Compose:
+docker-compose up -d api
 ```
 
-### 3. Levantar la API
-- **Local (Uvicorn):** `uvicorn src.api:app --reload`
-- **Docker:** `docker-compose up -d api`
+### 3. Ejemplo rápido de Inferencia (Uso)
+Con la API levantada, puedes enviar una petición HTTP para predecir si un cliente hará Churn o no.
 
----
-
-## 🌐 Uso de la API
-
-La API cuenta con endpoints para revisión de estado (`GET /health`) y para predicciones (`POST /predict`).
-
-**Ejemplo de Petición (POST):**
+**Petición (`curl`):**
 ```bash
 curl -X POST "http://127.0.0.1:8000/predict" \
      -H "Content-Type: application/json" \
-     -d '{"tenure": 2, "MonthlyCharges": 70.5, "TotalCharges": 141.0, "gender": 1, "InternetService": 2, "Contract": 0, "PaymentMethod": 2}'
+     -d '{
+           "tenure": 2, "MonthlyCharges": 70.5, "TotalCharges": 141.0, 
+           "gender": 1, "Partner": 0, "Dependents": 0, "PhoneService": 1, 
+           "MultipleLines": 0, "InternetService": 2, "OnlineSecurity": 0, 
+           "OnlineBackup": 0, "DeviceProtection": 0, "TechSupport": 0, 
+           "StreamingTV": 0, "StreamingMovies": 0, "Contract": 0, 
+           "PaperlessBilling": 1, "PaymentMethod": 2, "SeniorCitizen": 0
+         }'
 ```
 
-> **Documentación Interactiva:** Visita `http://127.0.0.1:8000/docs` con la API corriendo.
+**Salida esperada:**
+```json
+{
+  "prediction": 1,
+  "label": "Churn",
+  "probability": 0.73
+}
+```
 
 ---
 
 ## 👥 Roles y Responsabilidades
 
-- **Data Engineer:** Limpieza, encoding, y gestión de dependencias de datos en DVC (`src/data_loader.py`).
-- **ML Engineer:** Entrenamiento, métricas, y logging en MLflow (`src/model_trainer.py`).
-- **MLOps Engineer:** Orquestación (`dvc.yaml`, `config/`), Docker, e infraestructura.
-- **QA & Prod Engineer:** Pruebas unitarias (`test/`), pre-commit hooks, CI/CD con Codecov y despliegue de la API (`src/api.py`).
+El proyecto fue desarrollado simulando la dinámica de un equipo especializado colaborativo:
+
+- **Data Engineer:** Responsable de `src/data_loader.py` para la carga, imputación, codificación de variables y división del dataset.
+- **ML Engineer:** A cargo de `src/model_trainer.py`, gestionando el modelo, el cálculo de métricas (Accuracy, Recall) y el versionado con MLflow.
+- **MLOps Engineer:** Responsable de la orquestación (`config/params.yaml`), configuración de rutas, pipeline de DVC y flujos de integración.
+- **QA & Production Engineer:** Desarrolló las pruebas unitarias en `test/test_pipeline.py` y construyó el código de despliegue mediante la API en `src/api.py`.
 
 ---
 
-## ✅ Flujo de Trabajo y Calidad de Código
+## 🤖 Contribución de LLM (Inteligencia Artificial)
 
-Este proyecto utiliza el flujo de Git por ramas de funcionalidad (`feature/tu-rol`) integrado fuertemente con herramientas de calidad.
+Se utilizaron modelos de lenguaje grandes (LLMs) como asistencia técnica para agilizar el desarrollo y la depuración del código:
 
-- **Calidad Continua (pre-commit):** Formateo automático y validación antes de cada commit mediante Black y Ruff.  
-  `pre-commit run --all-files`
-- **Testing y Cobertura (Codecov):** Tests unitarios garantizados en CI.  
-  `python -m pytest test/ --cov=src --cov-report=html`
-
----
-
-> **Consideraciones Éticas:** Para un desglose exhaustivo sobre sesgos de datos y equidad de las variables (como `gender` o `SeniorCitizen`), consulta `docs/ETHICS.md`.
-
-> **Licencia:** Distribuido bajo la Licencia MIT.
+- **Data Engineer:** Utilizó **Gemini** para optimizar la lógica de preprocesamiento, como la limpieza de espacios en blanco y la conversión a numérico en la columna `TotalCharges`.
+- **ML Engineer:** Utilizó **Gemini** para estructurar la extracción del cálculo de métricas de desempeño y para revisar el proceso de guardado de los modelos utilizando `joblib`.
+- **MLOps Engineer:** Utilizó **ChatGPT / Gemini** para la resolución de conflictos relacionados con rutas de archivos absolutas vs relativas (`os.path`) y para generar plantillas estructurales para `dvc.yaml`.
+- **QA & Production Engineer:** Utilizó **Gemini** para bosquejar la estructura inicial de `pytest` (asserts y fixtures) y sugerir la lógica de captura de excepciones en FastAPI para la respuesta de la red en `predict.py`.
