@@ -46,9 +46,24 @@ jobs:
       run: |
           rm -f mlflow.db
           python -m pytest -s
+          pytest --cov --junitxml=junit.xml -o junit_family=legacy
+
 
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
       uses: codecov/test-results-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        
+    - name: Upload test results to Codecov
+      if: ${{ !cancelled() }}
+      uses: codecov/test-results-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        report-type: test_results
+
