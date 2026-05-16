@@ -62,8 +62,8 @@ class ChurnInput(BaseModel):
     MonthlyCharges: float
     TotalCharges: float
 
-    df_input = pd.DataFrame([input_data.dict()])
-    # Haz aquí los get_dummies y alineaciones usando las columnas de entrenamiento
+   def your_function(input_data):
+       df_input = pd.DataFrame([input_data.dict()])
     
     # Sintaxis oficial moderna para Pydantic v2
     model_config = ConfigDict(populate_by_name=True)
