@@ -73,11 +73,25 @@ def test_api_predict_endpoint():
     """
     # Payload de ejemplo basado en tu README
     payload = {
+        "gender": "Male",
+        "SeniorCitizen": 0,
+        "Partner": 1,
+        "Dependents": 0,
         "tenure": 5,
+        "PhoneService": 1,
+        "MultipleLines": "No",
+        "InternetService": "DSL",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "Yes",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": 1,
+        "PaymentMethod": "Electronic check",
         "MonthlyCharges": 80.0,
-        "TotalCharges": 400.0,
-        "gender": 1,
-        "Partner": 0
+        "TotalCharges": 400.0
     }
 
     response = client.post("/predict", json=payload)
