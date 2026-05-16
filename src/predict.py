@@ -4,7 +4,7 @@ import yaml
 import sys
 import os
 
-# 1. Asegurar que Python reconozca la carpeta raíz sin importar cómo se ejecute el script
+# 1. Ruta robusta a la raíz del proyecto
 ruta_script = os.path.abspath(__file__)
 directorio_src = os.path.dirname(ruta_script)
 raiz_proyecto = os.path.dirname(directorio_src)
@@ -12,12 +12,10 @@ raiz_proyecto = os.path.dirname(directorio_src)
 if raiz_proyecto not in sys.path:
     sys.path.append(raiz_proyecto)
 
-# Ahora la importación funcionará siempre
+# 2. Importar función de procesamiento de datos
 from src.data_loader import load_and_preprocess_data
 
-
 def load_config():
-    # 2. Construir la ruta absoluta hacia el archivo YAML
     ruta_config = os.path.join(raiz_proyecto, 'config', 'params.yaml')
     try:
         with open(ruta_config, 'r') as file:
@@ -26,52 +24,76 @@ def load_config():
         print(f"Error crítico: No se encontró el archivo de configuración en '{ruta_config}'.")
         sys.exit(1)
 
-
-def predict_new_customer(customer_data_df):
+def predict_new_customer(customer_data_dict):
+    """
+    Recibe un diccionario con las llaves crudas (tipo API), procesa las features,
+    alinea las columnas y devuelve la predicción.
+    """
     config = load_config()
 
-    # === SISTEMA DE RUTAS SEGURO Y BLINDADO ===
-    # Extrayendo la clave real 'model_path' en lugar de 'model_save'
-    config_path = config['paths']['model_path']
+    # Obtener estructura de columnas de entrenamiento real
+    X_train, _, _, _ = load_and_preprocess_data(config)
+    all_columns = X_train.columns
 
-    # Limpiamos el prefijo absoluto si se quedó pegado en el archivo de configuración
+    # Convertir el dict de cliente a DataFrame de una fila
+    cliente_df = pd.DataFrame([customer_data_dict])
+
+    # Unir para asegurar el correcto procesado como en entrenamiento
+    df_unido = pd.concat([X_train, cliente_df], ignore_index=True)
+    df_unido = pd.get_dummies(df_unido)
+
+    # Tomar SOLO la última fila (cliente nuevo)
+    cliente_procesado = df_unido.tail(1)
+
+    # Asegurarse de que las columnas estén en el mismo orden y presencia que el entrenamiento
+    cliente_procesado = cliente_procesado.reindex(columns=all_columns, fill_value=0)
+
+    # Cargar modelo
+    config_path = config['paths']['model_path']
     if config_path.startswith('/app/'):
         config_path = config_path.replace('/app/', '', 1)
     elif config_path.startswith('/'):
         config_path = config_path.lstrip('/')
-
-    # Unimos la raíz del proyecto detectada con la ruta interna limpia
-    ruta_relativa_modelo = config_path.replace('/', os.sep)
-    model_path = os.path.join(raiz_proyecto, ruta_relativa_modelo)
-    # ==========================================
-
-    # Manejo de errores si el modelo no existe
-    if not os.path.exists(model_path):
-        print(f"Error crítico: No se encontró un modelo entrenado en '{model_path}'.")
+    ruta_modelo = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
+    if not os.path.exists(ruta_modelo):
+        print(f"Error crítico: No se encontró un modelo entrenado en '{ruta_modelo}'.")
         print("Por favor, ejecuta 'python -m src.main' primero para entrenarlo.")
         sys.exit(1)
 
-    # Cargar modelo e inferir
-    model = joblib.load(model_path)
-    prediction = model.predict(customer_data_df)
+    model = joblib.load(ruta_modelo)
 
-    return "Churn (Sí abandona)" if prediction[0] == 1 else "No Churn (Se queda)"
+    pred = model.predict(cliente_procesado)[0]
+    prob = model.predict_proba(cliente_procesado)[0][1]
 
+    return {
+        "prediction": int(pred),
+        "label": "Churn (Sí abandona)" if pred == 1 else "No Churn (Se queda)",
+        "probability": round(float(prob), 2)
+    }
 
 if __name__ == "__main__":
-    config = load_config()
+    # Ejemplo de uso
+    ejemplo_cliente = {
+        "gender": "Male",
+        "SeniorCitizen": 0,
+        "Partner": 1,
+        "Dependents": 0,
+        "tenure": 5,
+        "PhoneService": 1,
+        "MultipleLines": "No",
+        "InternetService": "DSL",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "Yes",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": 1,
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 80.0,
+        "TotalCharges": 400.0
+    }
 
-    print("Cargando esquema de datos para emparejar formato del cliente de prueba...")
-    X_train, _, _, _ = load_and_preprocess_data(config)
-
-    # Crear un cliente de prueba con ceros en todas las columnas categóricas
-    sample_customer = pd.DataFrame(columns=X_train.columns)
-    sample_customer.loc[0] = 0
-
-    # Asignar valores específicos numéricos y categóricos preprocesados
-    sample_customer = pd.DataFrame(columns=X_train.columns)
-    sample_customer.loc[0] = 0
-
-    print("\nEjecutando predicción para el cliente de ejemplo...")
-    result = predict_new_customer(sample_customer)
-    print(f"Resultado de la predicción: {result}")
+    resultado = predict_new_customer(ejemplo_cliente)
+    print("Resultado de la predicción:", resultado)
