@@ -140,7 +140,7 @@ docker-compose build
 **Fuente:** Kaggle — IBM Sample Data  
 **Archivo:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`
 
-Para más detalles sobre las variables y descarga, consulta [DATASET.md](DATASET.md).
+Para más detalles sobre las variables y descarga, consulta [docs/DATASET.md](DATASET.md).
 
 ---
 
@@ -256,7 +256,7 @@ pre-commit run --all-files
 
 ## ⚖️ Consideraciones Éticas
 
-Consulta [ETHICS.md](ETHICS.md) para un análisis exhaustivo de sesgos, equidad y limitaciones del modelo (e.g. cuidado al usar `gender` o `SeniorCitizen`).
+Consulta [ETHICS.md](docs/ETHICS.md) para un análisis exhaustivo de sesgos, equidad y limitaciones del modelo (e.g. cuidado al usar `gender` o `SeniorCitizen`).
 
 ---
 
