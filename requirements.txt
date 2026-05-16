@@ -6,6 +6,7 @@ colorama==0.4.6
 fastapi==0.136.1
 h11==0.16.0
 httpx
+codecov-cli
 mlflow
 idna==3.15
 iniconfig==2.3.0
@@ -17,7 +18,6 @@ pluggy==1.6.0
 pydantic==2.13.4
 pydantic_core==2.46.4
 Pygments==2.20.0
-pytest==9.0.3
 python-dateutil==2.9.0.post0
 PyYAML==6.0.3
 scikit-learn==1.4.2
@@ -29,3 +29,6 @@ typing-inspection==0.4.2
 typing_extensions==4.15.0
 uvicorn==0.47.0
 kagglehub
+pytest==9.0.3
+pytest-cov==6.0.0
+pytest-mock==3.14.0
