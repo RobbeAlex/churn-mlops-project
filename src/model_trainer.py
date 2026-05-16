@@ -86,34 +86,3 @@ def train_and_save_model(X_train, y_train, X_test, y_test, config):
         'recall': recall_score(y_test, y_pred),
         'f1_score': f1_score(y_test, y_pred)
     }
-
-<<<<<<< HEAD
-    # Guardado blindado en la raíz del proyecto
-    ruta_script = os.path.abspath(__file__)
-    raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
-    ruta_relativa_modelo = config['paths']['model_path'].replace('/', os.sep)
-    save_path = os.path.join(raiz_proyecto, ruta_relativa_modelo)
-=======
-    # === SISTEMA DE RUTAS SEGURO Y BLINDADO ===
-    config_path = config['paths']['model_path']
-
-    if os.path.isabs(config_path):
-        save_path = config_path
-    else:
-        if config_path.startswith('/app/'):
-            config_path = config_path.replace('/app/', '', 1)
-        elif config_path.startswith('/'):
-            config_path = config_path.lstrip('/')
-
-        ruta_script = os.path.abspath(__file__)
-        raiz_proyecto = os.path.dirname(os.path.dirname(ruta_script))
-        save_path = os.path.join(raiz_proyecto, config_path.replace('/', os.sep))
-
-    # IMPRIMIR LA RUTA REAL EN LA CONSOLA DE PYTEST
-    print(f"\n[DEBUG TRAIN] El modelo se intentará guardar en: {save_path}")
->>>>>>> 8628f07b7c15fe61d61cc0d2b58470e0ec0504d1
-
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    joblib.dump(model, save_path)
-
-    return metrics
