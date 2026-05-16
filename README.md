@@ -179,7 +179,6 @@ Para más detalles sobre el dataset, consulta [DATASET.md](DATASET.md).
 
 ## 📂 Estructura del Proyecto
 
-<<<<<<< HEAD
 1. **Clonar:** `git clone https://github.com/RobbeAlex/churn-mlops-project`
 2. **Ramas:** Cada alumno crea su rama:
    - `git checkout -b feature/data-engineer`
@@ -198,8 +197,7 @@ Para más detalles sobre el dataset, consulta [DATASET.md](DATASET.md).
 
 ```bash
    `git clone https://github.com/RobbeAlex/churn-mlops-project`
-=======
->>>>>>> 8628f07b7c15fe61d61cc0d2b58470e0ec0504d1
+
 ```
 churn-mlops-project/
 │
