@@ -140,7 +140,7 @@ docker-compose build
 **Fuente:** Kaggle — IBM Sample Data  
 **Archivo:** `WA_Fn-UseC_-Telco-Customer-Churn.csv`
 
-Para más detalles sobre las variables y descarga, consulta [docs/DATASET.md](DATASET.md).
+Para más detalles sobre las variables y descarga, consulta [DATASET.md](docs/DATASET.md).
 
 ---
 
