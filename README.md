@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/banner.png" alt="MLOps Churn Prediction Banner" width="100%">
+</p>
+
 # 📡 Proyecto MLOps: Predicción de Churn en Telecomunicaciones
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
@@ -17,6 +21,10 @@ Este proyecto desarrolla un **sistema completo y colaborativo de predicción de 
 - **Pruebas y Calidad de Código** en Integración Continua (CI) usando `pre-commit` y `pytest`.
 - **Despliegue de API REST** mediante FastAPI, empaquetada con Docker para producción.
 
+<p align="center">
+  <img src="docs/images/Arquitectura de Pipeline.png" alt="Arquitectura del Pipeline MLOps" width="800">
+</p>
+
 ---
 
 ## 🏆 Resultados del Modelo
@@ -29,6 +37,11 @@ Este proyecto desarrolla un **sistema completo y colaborativo de predicción de 
 | **Recall** | 0.5389 | Identifica el 53.89% de los clientes que realmente abandonarán. |
 
 > **Nota:** El Recall de 0.54 se debe al desbalance de clases (74% No Churn / 26% Churn) presente en los datos originales.
+
+<p align="center">
+  <img src="docs/images/confusion_matrix.png" alt="Matriz de Confusión" width="45%">
+  <img src="docs/images/feature_importance.png" alt="Importancia de Variables" width="45%">
+</p>
 
 ---
 
