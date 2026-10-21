@@ -87,19 +87,24 @@ def test_train_and_save_model_logic(config):
     train_df.to_csv(os.path.join(real_processed_dir, 'train.csv'), index=False)
     test_df.to_csv(os.path.join(real_processed_dir, 'test.csv'), index=False)
 
-    # Cobertura de caminos lógicos en model_trainer (Logistic Regression)
-    config['model']['name'] = 'LogisticRegression'
-    config['paths']['model_path'] = "models/test_lr.pkl"
-    metrics_lr = train_and_save_model(config)
-    assert 'accuracy' in metrics_lr
+    with patch('mlflow.sklearn.log_model') as mock_log_model:
+        # Cobertura de caminos lógicos en model_trainer (Logistic Regression)
+        config['model']['name'] = 'LogisticRegression'
+        config['paths']['model_path'] = "models/test_lr.pkl"
+        metrics_lr = train_and_save_model(config)
+        assert 'accuracy' in metrics_lr
 
-    # Cobertura de caminos lógicos en model_trainer (Random Forest)
-    config['model']['name'] = 'RandomForest'
-    config['model']['n_estimators'] = 10
-    config['model']['max_depth'] = 3
-    config['paths']['model_path'] = "models/test_rf.pkl"
-    metrics_rf = train_and_save_model(config)
-    assert 'accuracy' in metrics_rf
+        # Cobertura de caminos lógicos en model_trainer (Random Forest)
+        config['model']['name'] = 'RandomForest'
+        config['model']['n_estimators'] = 10
+        config['model']['max_depth'] = 3
+        config['paths']['model_path'] = "models/test_rf.pkl"
+        metrics_rf = train_and_save_model(config)
+        assert 'accuracy' in metrics_rf
+
+        assert mock_log_model.call_count == 2
+        for call in mock_log_model.call_args_list:
+            assert call.kwargs["serialization_format"] == "cloudpickle"
 
     # Cobertura de Excepción (Modelo Inválido)
     config['model']['name'] = 'ModeloInexistente'
@@ -117,6 +122,42 @@ def test_train_and_save_model_file_not_found(config):
     with patch('os.path.exists', return_value=False):
         with pytest.raises(FileNotFoundError):
             train_and_save_model(config)
+
+
+def test_train_and_save_model_uses_cloudpickle_serialization(config):
+    train_df = pd.DataFrame({
+        "feature_1": [0, 1, 0, 1],
+        "feature_2": [1, 1, 0, 0],
+        "Churn": [0, 1, 0, 1]
+    })
+    test_df = pd.DataFrame({
+        "feature_1": [0, 1],
+        "feature_2": [0, 1],
+        "Churn": [0, 1]
+    })
+
+    config['model']['name'] = 'RandomForest'
+    config['paths']['model_path'] = "models/test_serialization.pkl"
+
+    mock_model = MagicMock()
+    mock_model.predict.return_value = [0, 1]
+    mock_run = MagicMock()
+    mock_run.__enter__.return_value = None
+    mock_run.__exit__.return_value = False
+
+    with patch('src.model_trainer.os.path.exists', return_value=True), \
+            patch('src.model_trainer.pd.read_csv', side_effect=[train_df, test_df]), \
+            patch('src.model_trainer.RandomForestClassifier', return_value=mock_model), \
+            patch('src.model_trainer.os.makedirs'), \
+            patch('src.model_trainer.joblib.dump'), \
+            patch('src.model_trainer.mlflow.set_experiment'), \
+            patch('src.model_trainer.mlflow.start_run', return_value=mock_run), \
+            patch('src.model_trainer.mlflow.log_param'), \
+            patch('src.model_trainer.mlflow.log_metrics'), \
+            patch('src.model_trainer.mlflow.sklearn.log_model') as mock_log_model:
+        metrics = train_and_save_model(config)
+        assert metrics['accuracy'] == 1.0
+        assert mock_log_model.call_args.kwargs["serialization_format"] == "cloudpickle"
 
 
 # ==========================================
