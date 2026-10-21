@@ -21,7 +21,8 @@ def plot_confusion_matrix():
     plt.ylabel('Valor Real', fontsize=14)
     plt.xlabel('Predicción del Modelo', fontsize=14)
     plt.tight_layout()
-    plt.savefig('confusion_matrix.png', dpi=300, transparent=True)
+    os.makedirs('results', exist_ok=True)
+    plt.savefig('results/confusion_matrix.png', dpi=300, transparent=True)
     print("Matriz de confusión guardada como 'confusion_matrix.png'")
 
 def plot_feature_importance():
@@ -36,7 +37,8 @@ def plot_feature_importance():
     plt.title('Importancia de Variables (Feature Importance)', fontsize=18, pad=20)
     plt.xlabel('Importancia Relativa', fontsize=14)
     plt.tight_layout()
-    plt.savefig('feature_importance.png', dpi=300, transparent=True)
+    os.makedirs('results', exist_ok=True)
+    plt.savefig('results/feature_importance.png', dpi=300, transparent=True)
     print("Importancia de variables guardada como 'feature_importance.png'")
 
 if __name__ == "__main__":

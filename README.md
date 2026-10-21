@@ -35,8 +35,8 @@ Este proyecto desarrolla un **sistema completo y colaborativo de predicción de 
 > **Nota:** El Recall de 0.54 se debe al desbalance de clases (74% No Churn / 26% Churn) presente en los datos originales.
 
 <p align="center">
-  <img src="docs/images/confusion_matrix.png" alt="Matriz de Confusión" width="45%">
-  <img src="docs/images/feature_importance.png" alt="Importancia de Variables" width="45%">
+  <img src="docs/images/results/confusion_matrix.png" alt="Matriz de Confusión" width="45%">
+  <img src="docs/images/results/feature_importance.png" alt="Importancia de Variables" width="45%">
 </p>
 
 ---
