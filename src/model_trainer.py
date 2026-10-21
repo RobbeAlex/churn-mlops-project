@@ -69,7 +69,11 @@ def train_and_save_model(config):
         }
 
         mlflow.log_metrics(metrics)
-        mlflow.sklearn.log_model(model, "modelo_churn")
+        mlflow.sklearn.log_model(
+            model,
+            "modelo_churn",
+            serialization_format=mlflow.sklearn.SERIALIZATION_FORMAT_CLOUDPICKLE,
+        )
 
         # Configuración robusta de guardado para el archivo .pkl
         config_path = config['paths']['model_path']
